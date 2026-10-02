@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Convert · Fortnite Tools</title>
+    <link rel="stylesheet" href="../style/common.css">
+    <link rel="stylesheet" href="../style/convert.css">
+</head>
+<body>
+    <header>
+        <div id="header-container">
+            <div id="logo">
+                <h1><a href="../../index.html">Fortnite Tools</a></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li><a href="./deviceMeshs.html">DeviceMeshs</a></li>
+                    <li><a href="./searchAssets.html">SearchAssets</a></li>
+                    <li><a href="./items.html">Items</a></li>
+                    <li><a href="" aria-current="page">Convert</a></li>
+                    <li><a href="./pathModifier.html">PathModifier</a></li>
+                    <li><a href="./id.html">Id</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div id="convert">
+
+            <!-- Emote → Animation -->
+            <div id="emoteToAnimation">
+                <p>Emote to Animation</p>
+                <div class="card-body">
+                    <input type="text" id="emoteId" placeholder="EID_DanceMoves" autocomplete="off">
+                    <button id="convertEmoteToAnimation">Convert</button>
+                    <div class="result-box" id="animationPath">Animation: —</div>
+                </div>
+            </div>
+
+            <!-- Emote → Sequence Animation -->
+            <div id="emoteToSequenceAnimation">
+                <p>Emote to Sequence Animation</p>
+                <div class="card-body">
+                    <input type="text" id="emoteIdSequenceAnimation" placeholder="EID_DanceMoves" autocomplete="off">
+                    <button id="convertEmoteToSequenceAnimation">Convert</button>
+                    <div class="result-box" id="sequenceAnimationPath">Sequence Animation: —</div>
+                </div>
+            </div>
+
+            <!-- Emote → Audio -->
+            <div id="emoteToAudio">
+                <p>Emote to Audio</p>
+                <div class="card-body">
+                    <input type="text" id="emoteIdAudio" placeholder="EID_DanceMoves" autocomplete="off">
+                    <button id="convertEmoteToAudio">Convert</button>
+                    <div class="result-box" id="audioPath">Audio: —</div>
+                </div>
+            </div>
+
+            <!-- Aura → VFX -->
+            <div id="auraToVFX">
+                <p>Aura to VFX</p>
+                <div class="card-body">
+                    <input type="text" id="auraId" placeholder="SparksAura_BoomBox" autocomplete="off">
+                    <button id="convertAuraToVFX">Convert</button>
+                    <div class="result-box" id="vfxPath">VFX: —</div>
+                </div>
+            </div>
+
+            <!-- MusicPack → Audio -->
+            <div id="musicpackToAudio">
+                <p>MusicPack to Audio</p>
+                <div class="card-body">
+                    <input type="text" id="musicpackId" placeholder="MusicPack_001_Floss" autocomplete="off">
+                    <button id="convertMusicPackToAudio">Convert</button>
+                    <div class="result-box" id="audioPath1">Audio: —</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <!-- <p>If you prefer the old site, click <a href="../oldSite/index.html">here</a> (but it is not mobile-friendly).</p> -->
+        <p data-i18n-html="footer.help">If you have any problems, my Discord server is: <a href="производство">awa Community</a>.</p>
+    </footer>
+    <script src="https://kit.fontawesome.com/1d1c3ac163.js" crossorigin="anonymous"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="../js/assetLib.js"></script>
+    <script src="../js/convert.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+/* Id page */
+#idTool { width: 94%; max-width: 1440px; margin: 28px auto 80px; }
+
+.id-category-label {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 800; font-size: 18px;
+    margin: 36px 0 12px;
+}
+.id-category-label::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
+
+.id-subcategory-label {
+    color: var(--fg-soft); font-size: 13px; font-weight: 600;
+    margin: 18px 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid var(--line-strong);
+}
+
+.id-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.id-empty { color: var(--fg-mute); font-size: 13px; padding: 8px 12px; font-style: italic; }
+
+@media (max-width: 900px) { .id-cards-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } #idTool { width: 96%; } }
+@media (max-width: 720px) { .id-cards-grid { grid-template-columns: 1fr; } #idTool { margin: 16px auto 60px; } }

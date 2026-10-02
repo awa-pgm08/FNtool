@@ -1,0 +1,28 @@
+/* PathModifier page */
+#pathModifier {
+    width: 94%; max-width: 1000px;
+    margin: 48px auto 80px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.pm-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+}
+.pm-row:last-child { border-bottom: none; }
+.pm-label { font-size: 13px; font-weight: 700; flex: 0 0 64px; }
+
+.pm-row input[type="text"] { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; }
+#modifiedPath { background: var(--bg-soft) !important; font-weight: 600; }
+
+.checkbox-group { display: flex; align-items: center; gap: 8px; font-size: 14px; flex: 1; cursor: pointer; }
+
+@media (max-width: 720px) {
+    #pathModifier { width: 96%; margin: 16px auto 60px; }
+    .pm-row { flex-direction: column; align-items: stretch; }
+    .pm-label { flex: none; }
+    .pm-row button { width: 100%; }
+}

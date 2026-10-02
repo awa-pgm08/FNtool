@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Items · Fortnite Tools</title>
+    <link rel="stylesheet" href="../style/common.css">
+    <link rel="stylesheet" href="../style/items.css">
+</head>
+<body>
+    <header>
+        <span id="top"></span>
+        <a href="#top" class="header-arrow-up" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></a>
+        <div id="header-container">
+            <div id="logo">
+                <h1><a href="../../index.html">Fortnite Tools</a></h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li><a href="./deviceMeshs.html">DeviceMeshs</a></li>
+                    <li><a href="./searchAssets.html">SearchAssets</a></li>
+                    <li><a href="./items.html" aria-current="page">Items</a></li>
+                    <li><a href="./convert.html">Convert</a></li>
+                    <li><a href="./pathModifier.html">PathModifier</a></li>
+                    <li><a href="./id.html">Id</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div id="items">
+
+            <!-- Controls -->
+            <div class="items-bar">
+                <div class="bar-row">
+                    <input type="search" id="q" data-i18n-placeholder="items.search" data-i18n-aria="items.searchAria" placeholder="Search name or ID (e.g. Renegade, EID_, CID_001)" autocomplete="off" aria-label="Search items">
+                    <button class="btn" id="recent" aria-pressed="false" data-i18n="items.recent" data-i18n-title="items.recentTip" title="Only items added in the last 7 days">Last 7 days</button>
+                </div>
+
+                <!-- Category chips (skin / emote / pickaxe …), built from the data -->
+                <div class="chip-block">
+                    <div class="chip-label"><span data-i18n="items.category">Category</span> <span class="hint" data-i18n="items.categoryHint"></span></div>
+                    <div class="chips" id="cats" role="group" data-i18n-aria="items.category" aria-label="Category"></div>
+                </div>
+
+                <div class="bar-row filters">
+                    <label class="field"><span data-i18n="items.rarity">Rarity</span>
+                        <select id="rarity"><option value="" data-i18n="common.all">All</option></select>
+                    </label>
+                    <label class="field"><span data-i18n="items.sort">Sort</span>
+                        <select id="sort">
+                            <option value="added-desc" data-i18n="items.sort.added-desc">Recently added</option>
+                            <option value="added-asc" data-i18n="items.sort.added-asc">Oldest added</option>
+                            <option value="name-asc" data-i18n="items.sort.name-asc">Name A → Z</option>
+                            <option value="name-desc" data-i18n="items.sort.name-desc">Name Z → A</option>
+                            <option value="rarity-desc" data-i18n="items.sort.rarity-desc">Rarity high → low</option>
+                            <option value="rarity-asc" data-i18n="items.sort.rarity-asc">Rarity low → high</option>
+                        </select>
+                    </label>
+                    <button class="btn btn-small" id="reset" data-i18n="items.reset">Reset</button>
+                </div>
+                <div class="bar-row status-row">
+                    <span id="status" aria-live="polite">Loading…</span>
+                    <button class="btn btn-small" id="refresh" data-i18n="items.refresh" data-i18n-title="items.refreshTip" title="Check for new items now">Refresh</button>
+                </div>
+            </div>
+
+            <!-- List -->
+            <ul id="list" class="item-list"></ul>
+            <div id="sentinel"></div>
+            <div id="state" class="state"></div>
+        </div>
+    </main>
+
+    <!-- Detail -->
+    <dialog id="detail" aria-labelledby="d-name">
+        <div class="d-head">
+            <button class="d-close" id="d-close" data-i18n-aria="common.close" aria-label="Close">✕</button>
+        </div>
+        <div class="d-body">
+            <div class="d-top">
+                <div class="d-img"><img id="d-img" alt=""></div>
+                <div class="d-title">
+                    <h2 id="d-name"></h2>
+                    <div class="d-badges" id="d-badges"></div>
+                </div>
+            </div>
+
+            <div class="d-id">
+                <span class="mono" id="d-id"></span>
+                <button class="btn btn-small" id="d-copy" data-i18n="items.copyId">Copy ID</button>
+            </div>
+
+            <dl class="d-meta" id="d-meta"></dl>
+            <p class="d-desc" id="d-desc"></p>
+
+            <section id="d-convert" hidden>
+                <h3 data-i18n="items.convert">Convert</h3>
+                <div class="res" id="r-anim"><h4 data-i18n="items.anim">Emote to Animation</h4><div class="result-box"></div></div>
+                <div class="res" id="r-seq"><h4 data-i18n="items.seq">Emote to Sequence Animation</h4><div class="result-box"></div></div>
+                <div class="res" id="r-audio"><h4 data-i18n="items.audio">Emote to Audio</h4><div class="result-box"></div></div>
+            </section>
+
+            <section id="d-assets">
+                <h3 data-i18n="items.assets">Search Assets</h3>
+                <div class="asset-opts">
+                    <div class="seg" role="group" data-i18n-aria="items.assets">
+                        <button type="button" id="fmt-on" data-i18n="items.formatted">Formatted</button>
+                        <button type="button" id="fmt-off" data-i18n="items.raw">Raw path</button>
+                    </div>
+                    <label class="checkbox-group"><input type="checkbox" id="opt-c"><span data-i18n="items.addC">Add _C</span></label>
+                </div>
+                <div id="r-assets"></div>
+            </section>
+        </div>
+    </dialog>
+
+    <footer>
+        <p data-i18n-html="footer.helpApi">If you have any problems, my Discord server is: <a href="производство">awa Community</a>. Item data: <a href="https://fortnite-api.com" target="_blank" rel="noopener">Fortnite-API</a>.</p>
+    </footer>
+    <script src="https://kit.fontawesome.com/1d1c3ac163.js" crossorigin="anonymous"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="../js/assetLib.js"></script>
+    <script src="../js/cosmeticsApi.js"></script>
+    <script src="../js/convert.js"></script>
+    <script src="../js/items.js"></script>
+</body>
+</html>

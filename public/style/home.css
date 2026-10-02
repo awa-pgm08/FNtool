@@ -1,0 +1,31 @@
+/* Home page */
+.home {
+    width: 94%; max-width: 1000px;
+    margin: 0 auto; padding: 56px 0 80px;
+}
+.home h2 { font-size: clamp(28px, 5vw, 44px); line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 12px; }
+.home > p { color: var(--fg-soft); max-width: 56ch; margin: 0 0 36px; font-size: 15px; }
+
+.tool-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.tool-list a {
+    display: flex; align-items: baseline; gap: 16px;
+    padding: 18px 4px;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    transition: background-color .15s, padding .15s;
+}
+.tool-list a:hover { background: var(--bg-soft); padding-left: 14px; }
+.tool-name { font-size: 18px; font-weight: 700; flex: 0 0 150px; }
+.tool-desc { color: var(--fg-soft); flex: 1; }
+.tool-list .tag {
+    font-size: 11px; font-weight: 700;
+    background: var(--invert-bg); color: var(--invert-fg);
+    padding: 2px 8px; border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+    .home { padding: 32px 0 60px; }
+    .tool-list a { flex-wrap: wrap; gap: 4px 12px; }
+    .tool-name { flex: 0 0 auto; }
+    .tool-desc { flex: 1 0 100%; font-size: 13px; }
+}

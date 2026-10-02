@@ -1,0 +1,56 @@
+/* DeviceMeshs page */
+#showAllToggle { display: flex; margin: 20px auto 0; }
+
+#meshDiv {
+    width: 94%; max-width: 1440px;
+    margin: 20px auto 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+}
+
+.card-playset-label { color: var(--fg-mute); }
+
+.card-settings { flex: 1; }
+.setting-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+.setting-row:last-child { border-bottom: none; }
+.setting-name {
+    flex: 0 0 36%; max-width: 36%;
+    padding: 9px 8px 9px 12px;
+    color: var(--fg-soft); font-size: 12px;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--line);
+    display: flex; align-items: center;
+    word-break: break-word; line-height: 1.4;
+}
+.setting-fields { flex: 1; padding: 7px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.setting-field-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.field-tag { font-size: 10px; color: var(--fg-mute); flex-shrink: 0; width: 24px; }
+.field-text {
+    flex: 1; min-width: 0;
+    font-family: var(--mono); font-size: 11px; color: var(--fg-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Floating search */
+.search-icon {
+    position: fixed; bottom: 72px; right: 20px;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line-strong); border-radius: 50%;
+    font-size: 16px; color: var(--fg); background: var(--bg);
+    cursor: pointer; z-index: 900;
+}
+.search-icon:hover { background: var(--invert-bg); color: var(--invert-fg); }
+#searchInput {
+    position: fixed; bottom: 126px; right: 20px;
+    width: 0; padding: 8px 0; border-width: 0;
+    border-radius: 999px;
+    opacity: 0;
+    transition: width .25s ease, opacity .25s ease, padding .25s ease;
+    z-index: 900;
+}
+#searchInput.active { width: 240px; padding: 8px 14px; border-width: 1px; border-color: var(--line-strong); opacity: 1; }
+
+@media (max-width: 900px) { #meshDiv { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); width: 96%; } }
+@media (max-width: 720px) { #meshDiv { grid-template-columns: 1fr; margin-bottom: 100px; } #searchInput.active { width: 190px; } }
