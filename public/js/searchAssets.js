@@ -3,8 +3,6 @@
 //   • All / New tabs  → fortnite_assets.gz / fortnite_assets_new.gz
 //   • "New AS" button → assets of cosmetics added in the last 7 days
 //                       (dates from Fortnite-API, paths from the asset list)
-//   • File upload     → every asset code found in any file (txt, json, csv…)
-//                       is looked up in the asset list
 // ─────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 500;
@@ -26,24 +24,12 @@ const el = {
     newAsBtn:  $('new-as-btn'),
     allTab:    $('all-assets-btn'),
     newTab:    $('new-assets-btn'),
-    drop:      $('drop-zone'),
-    fileInput: $('file-input'),
-    tools:     $('results-tools'),
-    copyAll:   $('copy-all'),
-    download:  $('download-all'),
-    nfBox:     $('nf-box'),
-    nfSummary: $('nf-summary'),
-    nfList:    $('nf-list'),
-    nfCopy:    $('nf-copy'),
 };
 
 let currentList = 'all';   // 'all' | 'new'  (which .gz file the tabs point at)
 let rows = [];             // [{ raw, meta? }]  — what is currently displayed
 let shown = 0;
 let newAsCache = null;     // { rows, cosmetics, missing }
-let notFound = [];         // codes from the last uploaded file that are not in the asset list
-
-const displayOf = raw => el.formatted.checked ? FT.assets.formatPath(raw, el.addC.checked) : raw;
 
 function setLoading(on, text = t('sa.searching')) {
     el.loading.classList.toggle('active', on);
@@ -86,7 +72,7 @@ function openJsonViewer(jsonPath, imgPath, filePath) {
 
 // ── Rendering ────────────────────────────────────────────────
 function makeRow(index, { raw, meta }) {
-    const display = displayOf(raw);
+    const display = el.formatted.checked ? FT.assets.formatPath(raw, el.addC.checked) : raw;
 
     const tr = document.createElement('tr');
     const tdIdx = document.createElement('td');
@@ -157,7 +143,6 @@ function renderAll(newRows, html) {
     shown = 0;
     el.results.innerHTML = '';
     el.count.innerHTML = html;
-    el.tools.hidden = !rows.length;
     if (!rows.length) {
         el.results.innerHTML = `<tr class="empty-row"><td colspan="2">${FT.ui.esc(t('sa.none'))}</td></tr>`;
         el.showMore.hidden = true;
@@ -256,93 +241,6 @@ async function showNewAssets() {
     }
 }
 
-// ── Upload a file: find every asset code inside ──────────────
-function setNotFound(list) {
-    notFound = list;
-    el.nfBox.hidden = !list.length;
-    el.nfBox.open = false;
-    el.nfList.textContent = list.join('\n');
-    el.nfSummary.textContent = t('sa.notFound', { k: list.length.toLocaleString() });
-}
-
-// Does asset path `p` match the path that was written in the file (any format)?
-function samePath(p, hint) {
-    let h = hint.replace(/\.uasset$/i, '').replace(/_C$/, '');
-    h = (h.startsWith('/') ? h : FT.assets.formatPath(h)).toLowerCase();
-    const last = h.slice(h.lastIndexOf('/') + 1);
-    if (!last.includes('.')) h += '.' + last;
-    const pf = FT.assets.formatPath(p).toLowerCase();
-    return pf === h || pf.endsWith(h.startsWith('/') ? h : '/' + h);
-}
-
-async function searchFiles(fileList) {
-    const files = [...fileList];
-    if (!files.length) return;
-
-    setLoading(true, t('sa.reading', { name: files[0].name }));
-    try {
-        const codes = new Map();
-        let read = 0;
-        for (const f of files) {
-            setLoading(true, t('sa.reading', { name: f.name }));
-            try {
-                FT.extract.collect(await FT.extract.readText(f), f.name, codes);
-                read++;
-            } catch (e) {
-                console.error(e);
-                FT.ui.toast(t(e.code === 'TOO_BIG' ? 'sa.fileTooBig' : 'sa.fileFail', { name: f.name }), 3500);
-            }
-        }
-        if (!read) return;
-        if (!codes.size) {
-            renderAll([], FT.ui.esc(t('sa.fileNoCodes')));
-            el.results.innerHTML = '';
-            setNotFound([]);
-            return;
-        }
-
-        setLoading(true, t('sa.findingFile'));
-        const wanted = [];
-        for (const k of codes.keys()) wanted.push(k, k + '_c');
-        const found = await FT.assets.findByIds(wanted);
-
-        const out = [], seen = new Set(), missing = [];
-        for (const it of codes.values()) {
-            let paths = [...(found.get(it.key) || []), ...(found.get(it.key + '_c') || [])];
-            if (!paths.length) { missing.push(it.label); continue; }
-            if (it.hint && paths.length > 1) {
-                const exact = paths.filter(p => samePath(p, it.hint));
-                if (exact.length) paths = exact;
-            }
-            const meta = `${it.label}${it.count > 1 ? ` ×${it.count}` : ''} · ${[...it.files].join(', ')}`;
-            for (const raw of paths) {
-                if (seen.has(raw)) continue;
-                seen.add(raw);
-                out.push({ raw, meta });
-            }
-        }
-
-        renderAll(out, resultsHtml('sa.fileSummary', {
-            n: out.length.toLocaleString(), c: codes.size.toLocaleString(), f: read.toLocaleString(),
-        }));
-        setNotFound(missing);
-    } catch (e) {
-        console.error(e);
-        FT.ui.toast(t('sa.loadFail'));
-    } finally {
-        setLoading(false);
-        el.fileInput.value = '';   // allow choosing the same file again
-    }
-}
-
-function downloadText(name, text) {
-    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url; a.download = name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 // ── Tabs (All / New file) ────────────────────────────────────
 async function switchAssetList(type) {
     currentList = type;
@@ -361,31 +259,9 @@ window.addEventListener('DOMContentLoaded', () => {
     el.newTab.addEventListener('click', () => switchAssetList('new'));
     el.showMore.addEventListener('click', renderChunk);
     el.showAll.addEventListener('click', () => { while (shown < rows.length) renderChunk(); });
-    document.addEventListener('ft:langchange', () => { if (rows.length) rerender(); el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() }); if (notFound.length) el.nfSummary.textContent = t('sa.notFound', { k: notFound.length.toLocaleString() }); });
+    document.addEventListener('ft:langchange', () => { if (rows.length) rerender(); el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() }); });
     el.formatted.addEventListener('change', rerender);
     el.addC.addEventListener('change', rerender);
-
-    // upload / drag & drop
-    el.drop.addEventListener('click', () => el.fileInput.click());
-    el.drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.fileInput.click(); } });
-    el.fileInput.addEventListener('change', () => searchFiles(el.fileInput.files));
-    ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => {
-        if (!e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return;
-        e.preventDefault();
-        el.drop.classList.add('drag');
-    }));
-    document.addEventListener('dragleave', e => { if (!e.relatedTarget) el.drop.classList.remove('drag'); });
-    document.addEventListener('drop', e => {
-        if (!e.dataTransfer || !e.dataTransfer.files.length) return;
-        e.preventDefault();
-        el.drop.classList.remove('drag');
-        searchFiles(e.dataTransfer.files);
-    });
-
-    // bulk actions on the current result list (uses the Formatted / Add _C options)
-    el.copyAll.addEventListener('click', () => FT.ui.copy(rows.map(r => displayOf(r.raw)).join('\n'), el.copyAll));
-    el.download.addEventListener('click', () => downloadText('assets.txt', rows.map(r => displayOf(r.raw)).join('\n') + '\n'));
-    el.nfCopy.addEventListener('click', () => FT.ui.copy(notFound.join('\n'), el.nfCopy));
 
     FT.assets.load('all').catch(() => FT.ui.toast('Failed to load fortnite_assets.gz'));
 });
