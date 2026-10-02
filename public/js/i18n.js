@@ -73,6 +73,10 @@ FT.i18n = (() => {
             'sa.newSummary': '{n} asset(s) from {c} cosmetic(s) added in the last {d} days',
             'sa.missing': '({m} not in the asset list yet)', 'sa.apiFail': 'Could not reach Fortnite-API. Try again in a moment.',
             'sa.viewJson': 'View JSON', 'sa.copyPath': 'Copy path',
+            'sa.fileTitle': 'Search inside files', 'sa.fileHint': 'Upload TXT, JSON, logs, or other text files to find every asset reference inside.',
+            'sa.chooseFiles': 'Choose files', 'sa.scanFiles': 'Scan files', 'sa.copyAll': 'Copy all results', 'sa.clearFiles': 'Clear',
+            'sa.noFiles': 'Choose one or more files first.', 'sa.fileReadFail': 'Could not read one of the files.',
+            'sa.fileSummary': '{f} file(s) scanned · {n} asset reference(s) found', 'sa.noFileMatches': 'No known asset references were found in these files.',
 
             'cat.outfit': 'Skin', 'cat.emote': 'Emote', 'cat.backpack': 'Back Bling', 'cat.pickaxe': 'Pickaxe',
             'cat.glider': 'Glider', 'cat.contrail': 'Contrail', 'cat.wrap': 'Wrap', 'cat.loadingscreen': 'Loading Screen',
@@ -143,6 +147,10 @@ FT.i18n = (() => {
             'sa.newSummary': '直近{d}日間に追加された {c} 件のコスメティックから {n} 件のアセット',
             'sa.missing': '（{m} 件はまだアセット一覧にありません）', 'sa.apiFail': 'Fortnite-APIに接続できませんでした。しばらくしてからもう一度お試しください。',
             'sa.viewJson': 'JSONを表示', 'sa.copyPath': 'パスをコピー',
+            'sa.fileTitle': 'ファイル内をアセット検索', 'sa.fileHint': 'TXT・JSON・ログなどをアップロードすると、ファイル内のアセット参照をすべて検索します。',
+            'sa.chooseFiles': 'ファイルを選択', 'sa.scanFiles': 'ファイルを検索', 'sa.copyAll': '結果をすべてコピー', 'sa.clearFiles': 'クリア',
+            'sa.noFiles': '先にファイルを1つ以上選択してください。', 'sa.fileReadFail': 'ファイルの読み込みに失敗しました。',
+            'sa.fileSummary': '{f} ファイルを検索 · {n} 件のアセット参照を検出', 'sa.noFileMatches': '既知のアセット参照は見つかりませんでした。',
 
             'cat.outfit': 'スキン', 'cat.emote': 'エモート', 'cat.backpack': 'バックアクセサリー', 'cat.pickaxe': 'ツルハシ',
             'cat.glider': 'グライダー', 'cat.contrail': 'コントレイル', 'cat.wrap': 'ラップ', 'cat.loadingscreen': 'ロード画面',

@@ -5,6 +5,7 @@ Static site (no build step). Serve the folder with any static host, e.g. `python
 ## Pages
 - **Items** – all cosmetics from [Fortnite-API](https://fortnite-api.com): search, filter (category chips such as skin / emote / pickaxe – multi-select, rarity, last 7 days), sort, auto-refresh every 2 min. Tap an item for ID, converter results (EID_*) and Search Assets results (every match: exact file name first, then related assets; Formatted ⇄ Raw path toggle, Add _C, Show all).
 - **SearchAssets** – keyword search in the asset list. **New AS** = assets of cosmetics added in the last 7 days.
+- **File search** – upload one or more TXT, JSON, log, or other text files to extract known Unreal asset references. Results support raw/formatted paths, `_C`, per-row copy, and copy-all.
 - **Convert / DeviceMeshs / PathModifier / Id** – unchanged features, new black & white theme.
 
 ## Structure

@@ -24,12 +24,20 @@ const el = {
     newAsBtn:  $('new-as-btn'),
     allTab:    $('all-assets-btn'),
     newTab:    $('new-assets-btn'),
+    files:     $('asset-files'),
+    fileList:  $('file-list'),
+    fileSearchBtn: $('file-search-btn'),
+    copyAllBtn: $('copy-all-btn'),
+    clearFilesBtn: $('clear-files-btn'),
+    fileStatus: $('file-status'),
 };
 
 let currentList = 'all';   // 'all' | 'new'  (which .gz file the tabs point at)
 let rows = [];             // [{ raw, meta? }]  — what is currently displayed
 let shown = 0;
 let newAsCache = null;     // { rows, cosmetics, missing }
+let selectedFiles = [];
+let fileScanActive = false;
 
 function setLoading(on, text = t('sa.searching')) {
     el.loading.classList.toggle('active', on);
@@ -178,6 +186,8 @@ async function searchAssets() {
     if (!keywords.length) { el.keywords.focus(); FT.ui.toast(t('sa.needKeyword')); return; }
 
     setLoading(true, t('sa.searching'));
+    fileScanActive = false;
+    el.copyAllBtn.hidden = true;
     try {
         const assets = await FT.assets.load(currentList);
         const matches = assets.filter(p => {
@@ -224,6 +234,8 @@ async function buildNewAs() {
 
 async function showNewAssets() {
     setLoading(true, t('sa.findingNew'));
+    fileScanActive = false;
+    el.copyAllBtn.hidden = true;
     try {
         const data = await buildNewAs();
         const keywords = getKeywords();
@@ -239,6 +251,118 @@ async function showNewAssets() {
     } finally {
         setLoading(false);
     }
+}
+
+// ── Search inside uploaded files ─────────────────────────────
+// The matcher accepts raw Unreal paths, formatted /Game paths, Windows
+// separators, JSON/log punctuation, and common bare asset-code tokens.
+function lookupKey(value) {
+    return String(value || '')
+        .replace(/\\/g, '/')
+        .replace(/^['"`\s]+|['"`,;\s]+$/g, '')
+        .replace(/^\.\//, '')
+        .replace(/^\/+/, '')
+        .toLowerCase();
+}
+
+function addAssetIndex(map, key, raw) {
+    const k = lookupKey(key);
+    if (!k || k.length < 3) return;
+    if (!map.has(k)) map.set(k, []);
+    if (!map.get(k).includes(raw)) map.get(k).push(raw);
+}
+
+function buildFileAssetIndex(assets) {
+    const index = new Map();
+    for (const raw of assets) {
+        addAssetIndex(index, raw, raw);
+        addAssetIndex(index, raw.replace(/\.(?:uasset|umap)$/i, ''), raw);
+        addAssetIndex(index, FT.assets.formatPath(raw), raw);
+        addAssetIndex(index, FT.assets.formatPath(raw).replace(/\.[^/.]+$/, ''), raw);
+        const base = raw.slice(raw.lastIndexOf('/') + 1).replace(/\.(?:uasset|umap)$/i, '');
+        if (/^[A-Za-z]{2,8}_[A-Za-z0-9_]{2,}$/.test(base)) addAssetIndex(index, base, raw);
+    }
+    return index;
+}
+
+function fileCandidates(text) {
+    const found = [];
+    const seen = new Set();
+    // Paths with at least one directory, including /Game/... and Windows paths.
+    const pathRe = /\/?(?:[A-Za-z0-9_.-]+[\\/]){1,}[A-Za-z0-9_.-]+(?:\.(?:uasset|umap|uexp|ubulk))?/gi;
+    for (const m of String(text).matchAll(pathRe)) {
+        const value = m[0];
+        const key = lookupKey(value);
+        if (!seen.has(key)) { seen.add(key); found.push(value); }
+    }
+    // Common Unreal asset-code forms that appear without their full path.
+    const codeRe = /\b[A-Za-z]{2,8}_[A-Za-z0-9_]{2,}\b/g;
+    for (const m of String(text).matchAll(codeRe)) {
+        const key = lookupKey(m[0]);
+        if (!seen.has(key)) { seen.add(key); found.push(m[0]); }
+    }
+    return found;
+}
+
+function renderFileList() {
+    el.fileList.innerHTML = '';
+    for (const file of selectedFiles) {
+        const chip = document.createElement('span');
+        chip.className = 'file-chip';
+        chip.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        el.fileList.appendChild(chip);
+    }
+    const hasFiles = selectedFiles.length > 0;
+    el.clearFilesBtn.hidden = !hasFiles;
+    el.fileSearchBtn.disabled = !hasFiles;
+}
+
+async function scanUploadedFiles() {
+    if (!selectedFiles.length) {
+        el.fileStatus.textContent = t('sa.noFiles');
+        FT.ui.toast(t('sa.noFiles'));
+        return;
+    }
+    setLoading(true, t('sa.searching'));
+    try {
+        const [assets, texts] = await Promise.all([
+            FT.assets.load('all'),
+            Promise.all(selectedFiles.map(async file => ({ name: file.name, text: await file.text() }))),
+        ]);
+        const index = buildFileAssetIndex(assets);
+        const matches = new Map();
+        for (const file of texts) {
+            for (const candidate of fileCandidates(file.text)) {
+                const rawPaths = index.get(lookupKey(candidate)) || [];
+                for (const raw of rawPaths) {
+                    if (!matches.has(raw)) matches.set(raw, new Set());
+                    matches.get(raw).add(file.name);
+                }
+            }
+        }
+        const fileRows = [...matches].map(([raw, names]) => ({ raw, meta: [...names].join(', ') }));
+        fileScanActive = true;
+        renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
+        el.copyAllBtn.hidden = fileRows.length === 0;
+        if (!fileRows.length) el.fileStatus.textContent = t('sa.noFileMatches');
+        else el.fileStatus.textContent = '';
+    } catch (e) {
+        console.error(e);
+        el.fileStatus.textContent = t('sa.fileReadFail');
+        FT.ui.toast(t('sa.fileReadFail'));
+    } finally {
+        setLoading(false);
+    }
+}
+
+function clearUploadedFiles() {
+    selectedFiles = [];
+    el.files.value = '';
+    el.fileList.innerHTML = '';
+    el.fileStatus.textContent = '';
+    el.copyAllBtn.hidden = true;
+    el.clearFilesBtn.hidden = true;
+    fileScanActive = false;
 }
 
 // ── Tabs (All / New file) ────────────────────────────────────
@@ -259,9 +383,21 @@ window.addEventListener('DOMContentLoaded', () => {
     el.newTab.addEventListener('click', () => switchAssetList('new'));
     el.showMore.addEventListener('click', renderChunk);
     el.showAll.addEventListener('click', () => { while (shown < rows.length) renderChunk(); });
+    el.files.addEventListener('change', () => {
+        selectedFiles = [...el.files.files];
+        renderFileList();
+        el.fileStatus.textContent = '';
+    });
+    el.fileSearchBtn.addEventListener('click', scanUploadedFiles);
+    el.clearFilesBtn.addEventListener('click', clearUploadedFiles);
+    el.copyAllBtn.addEventListener('click', () => {
+        const text = rows.map(r => el.formatted.checked ? FT.assets.formatPath(r.raw, el.addC.checked) : r.raw).join('\n');
+        FT.ui.copy(text, el.copyAllBtn);
+    });
     document.addEventListener('ft:langchange', () => { if (rows.length) rerender(); el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() }); });
     el.formatted.addEventListener('change', rerender);
     el.addC.addEventListener('change', rerender);
 
+    renderFileList();
     FT.assets.load('all').catch(() => FT.ui.toast('Failed to load fortnite_assets.gz'));
 });
