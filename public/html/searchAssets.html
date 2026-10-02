@@ -57,34 +57,21 @@
                 <div class="search-actions">
                     <button class="search-btn" id="search-btn" data-i18n="sa.search">Search</button>
                     <button class="btn" id="new-as-btn" data-i18n="sa.newAs" data-i18n-title="sa.newAsTip" title="Assets of cosmetics added in the last 7 days">New AS</button>
+                    <label class="btn file-upload-btn" for="asset-files">
+                        <span data-i18n="sa.chooseFiles">Upload file</span>
+                        <input id="asset-files" type="file" multiple accept=".txt,.json,.log,.ini,.cfg,.usmap,.uasset,.uexp,.ubulk,text/*">
+                    </label>
+                    <button class="btn file-cancel-btn" id="clear-files-btn" data-i18n-title="sa.clearFiles" title="Clear uploaded files" aria-label="Clear uploaded files" hidden>×</button>
+                    <button class="btn" id="copy-all-btn" data-i18n="sa.copyAll" hidden>Copy all results</button>
                 </div>
+                <div id="file-list" class="file-list" aria-live="polite"></div>
+                <p id="file-status" class="file-status" aria-live="polite"></p>
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <span id="loading-text" data-i18n="sa.searching">Searching...</span>
                 </div>
             </div>
-
-            <!-- Search asset references inside local files -->
-            <section class="file-search-panel" aria-labelledby="file-search-title">
-                <div class="file-search-heading">
-                    <div>
-                        <h2 id="file-search-title" data-i18n="sa.fileTitle">Search inside files</h2>
-                        <p data-i18n="sa.fileHint">Upload TXT, JSON, logs, or other text files to find every asset reference inside.</p>
-                    </div>
-                    <label class="file-picker btn" for="asset-files">
-                        <span data-i18n="sa.chooseFiles">Choose files</span>
-                        <input id="asset-files" type="file" multiple accept=".txt,.json,.log,.ini,.cfg,.usmap,.uasset,.uexp,.ubulk,text/*">
-                    </label>
-                </div>
-                <div id="file-list" class="file-list" aria-live="polite"></div>
-                <div class="file-search-actions">
-                    <button class="search-btn" id="file-search-btn" data-i18n="sa.scanFiles">Scan files</button>
-                    <button class="btn" id="copy-all-btn" data-i18n="sa.copyAll" hidden>Copy all results</button>
-                    <button class="btn" id="clear-files-btn" data-i18n="sa.clearFiles" hidden>Clear</button>
-                </div>
-                <p id="file-status" class="file-status" aria-live="polite"></p>
-            </section>
 
             <!-- Result count -->
             <div id="results-count" aria-live="polite"></div>

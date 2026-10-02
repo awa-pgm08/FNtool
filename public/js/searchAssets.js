@@ -26,7 +26,6 @@ const el = {
     newTab:    $('new-assets-btn'),
     files:     $('asset-files'),
     fileList:  $('file-list'),
-    fileSearchBtn: $('file-search-btn'),
     copyAllBtn: $('copy-all-btn'),
     clearFilesBtn: $('clear-files-btn'),
     fileStatus: $('file-status'),
@@ -182,6 +181,10 @@ function resultsHtml(key, vars) {
 
 // ── Normal search ────────────────────────────────────────────
 async function searchAssets() {
+    if (selectedFiles.length) {
+        await scanUploadedFiles();
+        return;
+    }
     const keywords = getKeywords();
     if (!keywords.length) { el.keywords.focus(); FT.ui.toast(t('sa.needKeyword')); return; }
 
@@ -314,7 +317,6 @@ function renderFileList() {
     }
     const hasFiles = selectedFiles.length > 0;
     el.clearFilesBtn.hidden = !hasFiles;
-    el.fileSearchBtn.disabled = !hasFiles;
 }
 
 async function scanUploadedFiles() {
@@ -386,9 +388,8 @@ window.addEventListener('DOMContentLoaded', () => {
     el.files.addEventListener('change', () => {
         selectedFiles = [...el.files.files];
         renderFileList();
-        el.fileStatus.textContent = '';
+        el.fileStatus.textContent = selectedFiles.length ? t('sa.fileHint') : '';
     });
-    el.fileSearchBtn.addEventListener('click', scanUploadedFiles);
     el.clearFilesBtn.addEventListener('click', clearUploadedFiles);
     el.copyAllBtn.addEventListener('click', () => {
         const text = rows.map(r => el.formatted.checked ? FT.assets.formatPath(r.raw, el.addC.checked) : r.raw).join('\n');

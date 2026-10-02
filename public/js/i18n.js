@@ -74,7 +74,7 @@ FT.i18n = (() => {
             'sa.missing': '({m} not in the asset list yet)', 'sa.apiFail': 'Could not reach Fortnite-API. Try again in a moment.',
             'sa.viewJson': 'View JSON', 'sa.copyPath': 'Copy path',
             'sa.fileTitle': 'Search inside files', 'sa.fileHint': 'Upload TXT, JSON, logs, or other text files to find every asset reference inside.',
-            'sa.chooseFiles': 'Choose files', 'sa.scanFiles': 'Scan files', 'sa.copyAll': 'Copy all results', 'sa.clearFiles': 'Clear',
+            'sa.chooseFiles': 'Upload file', 'sa.scanFiles': 'Scan files', 'sa.copyAll': 'Copy all results', 'sa.clearFiles': 'Cancel uploaded files',
             'sa.noFiles': 'Choose one or more files first.', 'sa.fileReadFail': 'Could not read one of the files.',
             'sa.fileSummary': '{f} file(s) scanned · {n} asset reference(s) found', 'sa.noFileMatches': 'No known asset references were found in these files.',
 
@@ -148,7 +148,7 @@ FT.i18n = (() => {
             'sa.missing': '（{m} 件はまだアセット一覧にありません）', 'sa.apiFail': 'Fortnite-APIに接続できませんでした。しばらくしてからもう一度お試しください。',
             'sa.viewJson': 'JSONを表示', 'sa.copyPath': 'パスをコピー',
             'sa.fileTitle': 'ファイル内をアセット検索', 'sa.fileHint': 'TXT・JSON・ログなどをアップロードすると、ファイル内のアセット参照をすべて検索します。',
-            'sa.chooseFiles': 'ファイルを選択', 'sa.scanFiles': 'ファイルを検索', 'sa.copyAll': '結果をすべてコピー', 'sa.clearFiles': 'クリア',
+            'sa.chooseFiles': 'ファイルをアップロード', 'sa.scanFiles': 'ファイルを検索', 'sa.copyAll': '結果をすべてコピー', 'sa.clearFiles': 'アップロードをキャンセル',
             'sa.noFiles': '先にファイルを1つ以上選択してください。', 'sa.fileReadFail': 'ファイルの読み込みに失敗しました。',
             'sa.fileSummary': '{f} ファイルを検索 · {n} 件のアセット参照を検出', 'sa.noFileMatches': '既知のアセット参照は見つかりませんでした。',
 

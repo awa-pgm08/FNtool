@@ -23,6 +23,13 @@
 .checkbox-group { display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; }
 .checkbox-group label { cursor: pointer; }
 .search-actions { display: flex; gap: 8px; }
+.file-upload-btn { position: relative; overflow: hidden; }
+.file-upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.file-cancel-btn { min-width: 40px; padding-left: 10px; padding-right: 10px; font-size: 20px; line-height: 1; }
+.file-list { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.file-list:empty { display: none; }
+.file-chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; font: 12px var(--mono); color: var(--fg-soft); background: var(--bg); word-break: break-all; }
+.file-status { min-height: 20px; margin: 0; width: 100%; color: var(--fg-soft); font-size: 12px; }
 
 .file-search-panel {
     border: 1px solid var(--line);
@@ -36,11 +43,7 @@
 .file-search-heading p { margin: 3px 0 0; color: var(--fg-soft); font-size: 12px; }
 .file-picker { position: relative; overflow: hidden; flex-shrink: 0; }
 .file-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.file-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.file-list:empty { display: none; }
-.file-chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; font: 12px var(--mono); color: var(--fg-soft); background: var(--bg); word-break: break-all; }
 .file-search-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.file-status { min-height: 20px; margin: 8px 0 0; color: var(--fg-soft); font-size: 12px; }
 .file-search-actions button:disabled { opacity: .45; cursor: not-allowed; }
 
 .loading { display: none; align-items: center; gap: 8px; color: var(--fg-mute); font-size: 13px; width: 100%; }
