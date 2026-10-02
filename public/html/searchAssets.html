@@ -59,14 +59,36 @@
                     <button class="btn" id="new-as-btn" data-i18n="sa.newAs" data-i18n-title="sa.newAsTip" title="Assets of cosmetics added in the last 7 days">New AS</button>
                 </div>
 
+                <div class="drop-zone" id="drop-zone" role="button" tabindex="0" data-i18n-aria="sa.upload" aria-label="Upload file">
+                    <input type="file" id="file-input" multiple hidden>
+                    <span class="drop-icon" aria-hidden="true">📂</span>
+                    <div class="drop-text">
+                        <strong data-i18n="sa.upload">Upload file</strong>
+                        <span data-i18n="sa.uploadHint">Drop or choose txt / json / csv… any file. Every asset code inside is searched.</span>
+                    </div>
+                </div>
+
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <span id="loading-text" data-i18n="sa.searching">Searching...</span>
                 </div>
             </div>
 
-            <!-- Result count -->
-            <div id="results-count" aria-live="polite"></div>
+            <!-- Result count + bulk actions -->
+            <div class="results-bar">
+                <div id="results-count" aria-live="polite"></div>
+                <div class="results-tools" id="results-tools" hidden>
+                    <button class="btn" id="copy-all" data-i18n="sa.copyAll">Copy all</button>
+                    <button class="btn" id="download-all" data-i18n="sa.download">Download .txt</button>
+                </div>
+            </div>
+
+            <!-- Codes from an uploaded file that are not in the asset list -->
+            <details class="nf-box" id="nf-box" hidden>
+                <summary id="nf-summary"></summary>
+                <pre id="nf-list"></pre>
+                <button class="btn" id="nf-copy" data-i18n="sa.copyNotFound">Copy not found</button>
+            </details>
 
             <!-- Results table -->
             <div class="table-wrapper">
@@ -91,6 +113,7 @@
     <script src="../js/i18n.js"></script>
     <script src="../js/assetLib.js"></script>
     <script src="../js/cosmeticsApi.js"></script>
+    <script src="../js/assetExtract.js"></script>
     <script src="../js/searchAssets.js"></script>
 </body>
 </html>
