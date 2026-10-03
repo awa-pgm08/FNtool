@@ -310,7 +310,7 @@
 
     // ── Search Assets: every match (exact file name first, then anything containing the ID) ──
     const ASSET_CHUNK = 100;
-    const A = { exact: [], related: [], guesses: [], shown: { exact: 0, related: 0 }, item: null };
+    const A = { exact: [], related: [], shown: { exact: 0, related: 0 }, item: null };
 
     const assetDisplay = raw => (S.fmt ? FT.assets.formatPath(raw, S.addC) : raw);
 
@@ -353,84 +353,6 @@
         actions.firstChild.textContent = t('items.showMore', { n: left.toLocaleString() });
     }
 
-    function replaceAllInsensitive(value, from, to) {
-        const escaped = String(from).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return value.replace(new RegExp(escaped, 'gi'), to);
-    }
-
-    function guessedAssetPaths(item, assets) {
-        const match = String(item.id).match(/^[^_]+_(.+)$/);
-        if (!match) return [];
-        const subject = match[1];
-        const prefix = String(item.id).split('_', 1)[0].toUpperCase();
-        const filePrefixes = {
-            CID: ['Character'], BID: ['Backpack'], EID: ['Emote'],
-            Pickaxe: ['Pickaxe'], Glider: ['Glider'], Wrap: ['Wrap'],
-        };
-        const wantedPrefixes = filePrefixes[prefix] || [prefix];
-        const out = new Map();
-        const add = (raw, reason) => {
-            if (!raw || out.has(raw)) return;
-            out.set(raw, reason);
-        };
-
-        for (const raw of assets) {
-            const clean = raw.replace(/\\/g, '/');
-            const file = clean.slice(clean.lastIndexOf('/') + 1);
-            const stem = file.replace(/\.(?:uasset|umap)$/i, '');
-            const dir = clean.slice(0, clean.lastIndexOf('/'));
-
-            // Character_ApronChow, Backpack_ApronChow, etc.: learn the
-            // directory from existing <Type>_<OtherName> assets.
-            for (const filePrefix of wantedPrefixes) {
-                if (!new RegExp(`^${filePrefix}_[^/]+$`, 'i').test(stem)) continue;
-                add(`${dir}/${filePrefix}_${subject}.uasset`, `${filePrefix}_* pattern`);
-            }
-
-            // Emote_GuardHence_Joiner1_CMM_M in Emotes/GuardHence/CMM
-            // becomes Emote_ApronChow_Joiner1_CMM_M in Emotes/ApronChow/CMM.
-            if (prefix === 'EID') {
-                const emote = clean.match(/(?:^|\/)Emotes\/([^/]+)\/([^/]+)\/([^/]+)$/i);
-                if (emote && /^Emote_/i.test(stem) && stem.toLowerCase().includes(emote[1].toLowerCase())) {
-                    add(replaceAllInsensitive(clean, emote[1], subject), 'Emotes/<name> pattern');
-                }
-            }
-
-            // If a path already contains the cosmetic name, reuse its layout
-            // with the known name substituted. This covers new naming families.
-            if (clean.toLowerCase().includes(subject.toLowerCase())) continue;
-        }
-        return [...out.keys()].slice(0, 80);
-    }
-
-    function guessSection() {
-        const wrap = document.createElement('div');
-        wrap.className = 'asset-guess';
-        const h = document.createElement('h4');
-        h.textContent = t('items.guessTitle');
-        const hint = document.createElement('p');
-        hint.className = 'guess-hint';
-        hint.textContent = t('items.guessHint');
-        const body = document.createElement('div');
-        body.className = 'result-box';
-        const button = document.createElement('button');
-        button.type = 'button'; button.className = 'btn btn-small';
-        button.textContent = t('items.guessButton');
-        button.addEventListener('click', async () => {
-            setBox(body, 'loading', t('items.searching'));
-            try {
-                const assets = await FT.assets.load('all');
-                A.guesses = guessedAssetPaths(A.item, assets);
-                if (!A.guesses.length) return setBox(body, 'error', t('items.guessNone'));
-                setBox(body, 'success', linesEl(A.guesses.map(value => ({ tag: t('items.guessed'), value: assetDisplay(value) }))));
-            } catch (e) {
-                setBox(body, 'error', t('items.assetFail'));
-            }
-        });
-        wrap.append(h, hint, button, body);
-        return wrap;
-    }
-
     function renderAssets() {
         const host = $('r-assets');
         host.replaceChildren();
@@ -438,11 +360,9 @@
             const box = document.createElement('div');
             setBox(box, 'error', t('items.noAsset'));
             host.appendChild(box);
-            host.appendChild(guessSection());
             return;
         }
         A.shown = { exact: 0, related: 0 };
-        if (!A.exact.length) host.appendChild(guessSection());
         for (const kind of ['exact', 'related']) {
             if (!A[kind].length) continue;
             host.appendChild(assetSection(kind));

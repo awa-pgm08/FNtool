@@ -61,9 +61,6 @@ FT.i18n = (() => {
             'items.exact': 'Exact match ({n})', 'items.related': 'Related assets ({n})',
             'items.showMore': 'Show more ({n} left)', 'items.showAll': 'Show all',
             'items.tagPath': 'Path', 'items.tagFile': 'File',
-            'items.guessButton': 'Show guesses', 'items.guessTitle': 'Possible asset paths',
-            'items.guessHint': 'No exact filename match. These paths are inferred from patterns in the asset list.',
-            'items.guessNone': 'No likely paths could be inferred.', 'items.guessed': 'Guess',
 
             'sa.all': 'All', 'sa.new': 'New', 'sa.assetList': 'Asset list',
             'sa.keywords': 'Keywords separated by spaces or commas',
@@ -138,9 +135,6 @@ FT.i18n = (() => {
             'items.exact': '完全一致（{n}）', 'items.related': '関連アセット（{n}）',
             'items.showMore': 'さらに表示（残り {n} 件）', 'items.showAll': 'すべて表示',
             'items.tagPath': 'パス', 'items.tagFile': 'ファイル',
-            'items.guessButton': '推測を表示', 'items.guessTitle': '推測されたアセットパス',
-            'items.guessHint': '完全一致するファイル名がありません。アセット一覧の命名パターンから推測した候補です。',
-            'items.guessNone': '推測できる候補が見つかりませんでした。', 'items.guessed': '推測',
 
             'sa.all': 'すべて', 'sa.new': '新着', 'sa.assetList': 'アセット一覧',
             'sa.keywords': 'キーワード（スペースまたはカンマ区切り）',

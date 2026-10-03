@@ -7,7 +7,6 @@ Static site (no build step). Serve the folder with any static host, e.g. `python
 - **SearchAssets** – keyword search in the asset list. **New AS** = assets of cosmetics added in the last 7 days.
 - **File search** – upload one or more TXT, JSON, log, or other text files to extract known Unreal asset references. Results support raw/formatted paths, `_C`, per-row copy, and copy-all.
 - **Automatic data sync** – GitHub Actions checks `Th3DryZ69/FortniteToolsWeb` every 6 hours and updates the four files in `public/data` automatically. It can also be started manually from the Actions tab.
-- **Asset path guesses** – Items shows a “Show guesses” button when no exact asset filename is found. It learns existing Character/Emote naming patterns and generates copyable candidates until an exact match appears.
 - **Convert / DeviceMeshs / PathModifier / Id** – unchanged features, new black & white theme.
 
 ## Structure
