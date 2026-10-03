@@ -144,6 +144,10 @@
 .asset-group h4 { margin: 0 0 6px; }
 .asset-more { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .line .val { font-family: var(--mono); font-size: 12px; }
+.asset-guess { margin-bottom: 14px; padding: 10px; border: 1px dashed var(--line-strong); border-radius: var(--radius); background: var(--bg-soft); }
+.asset-guess h4 { margin: 0 0 2px; }
+.guess-hint { margin: 0 0 8px; color: var(--fg-soft); font-size: 12px; }
+.asset-guess .result-box { margin-top: 8px; }
 
 /* dialog uses dynamic viewport height so mobile browser bars don't cut it off */
 #detail { max-height: 92vh; max-height: 92dvh; }
