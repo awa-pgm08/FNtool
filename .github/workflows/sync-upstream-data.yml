@@ -1,0 +1,69 @@
+name: Sync upstream asset data and deploy
+
+on:
+  schedule:
+    # Check the upstream repository every 6 hours.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: upstream-data-sync
+  cancel-in-progress: true
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download latest upstream data
+        env:
+          UPSTREAM_RAW: https://raw.githubusercontent.com/Th3DryZ69/FortniteToolsWeb/main/public/data
+        run: |
+          set -euo pipefail
+          mkdir -p public/data
+          for file in devicemeshs.json fortnite_assets.gz fortnite_assets_new.gz id.json; do
+            curl --fail --location --retry 3 --silent --show-error \
+              "$UPSTREAM_RAW/$file" \
+              --output "public/data/$file"
+          done
+
+      - name: Commit data changes
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/data/
+          if git diff --cached --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'Upstream data is already up to date.'
+          else
+            git commit -m 'Sync asset data from upstream'
+            git push origin HEAD:main
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
