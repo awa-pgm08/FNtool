@@ -1,0 +1,20 @@
+.viewer-page { width: min(1100px, 94%); margin: 28px auto 80px; }
+.intro { margin-bottom: 18px; }
+.intro h2 { margin: 0 0 8px; }
+.intro p { margin: 0; color: var(--fg-soft); line-height: 1.7; }
+.viewer-card, .controls-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-soft); padding: 14px; }
+.viewer-card { overflow: hidden; }
+model-viewer { display: block; width: 100%; height: min(62vh, 620px); min-height: 340px; border-radius: calc(var(--radius) - 2px); background: linear-gradient(145deg, #202124, #050505); }
+.viewer-status { padding: 10px 2px 0; color: var(--fg-soft); font-size: 12px; }
+.controls-card { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.file-btn { position: relative; overflow: hidden; cursor: pointer; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.path-row { flex: 1 1 100%; display: flex; gap: 10px; align-items: baseline; color: var(--fg-mute); font-size: 12px; }
+.path-row code { color: var(--fg); font-family: var(--mono); overflow-wrap: anywhere; }
+.notice { color: var(--fg-mute); font-size: 12px; line-height: 1.7; }
+@media (max-width: 720px) {
+    .viewer-page { width: 96%; margin-top: 18px; }
+    model-viewer { min-height: 280px; height: 58vh; }
+    .controls-card .btn { flex: 1; text-align: center; }
+    .path-row { display: block; }
+}
