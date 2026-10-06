@@ -55,15 +55,6 @@
                     <label for="addC" data-i18n="sa.addC">Add _C</label>
                 </div>
 
-                <label class="sort-group" for="asset-sort">
-                    <span data-i18n="sa.sort">Sort</span>
-                    <select id="asset-sort">
-                        <option value="added-desc" data-i18n="sa.sort.added-desc">Added order</option>
-                        <option value="name-asc" data-i18n="sa.sort.name-asc">A → Z</option>
-                        <option value="name-desc" data-i18n="sa.sort.name-desc">Z → A</option>
-                    </select>
-                </label>
-
                 <div class="search-actions">
                     <button class="search-btn" id="search-btn" data-i18n="sa.search">Search</button>
                     <button class="btn" id="new-as-btn" data-i18n="sa.newAs" data-i18n-title="sa.newAsTip" title="Assets of cosmetics added in the last 7 days">New AS</button>
@@ -76,6 +67,14 @@
                 </div>
                 <div id="file-list" class="file-list" aria-live="polite"></div>
                 <p id="file-status" class="file-status" aria-live="polite"></p>
+                <label class="sort-group" for="asset-sort">
+                    <span data-i18n="sa.sort">Sort</span>
+                    <select id="asset-sort">
+                        <option value="added-desc" data-i18n="sa.sort.added-desc">Added order</option>
+                        <option value="name-asc" data-i18n="sa.sort.name-asc">A → Z</option>
+                        <option value="name-desc" data-i18n="sa.sort.name-desc">Z → A</option>
+                    </select>
+                </label>
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>

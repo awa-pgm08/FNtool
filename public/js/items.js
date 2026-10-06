@@ -152,8 +152,11 @@
         btn.dataset.id = item.id;
 
         const thumb = document.createElement('span');
-        thumb.className = `thumb${needsGrayImage(item) ? ' gray-image-bg' : ''}`;
-        thumb.appendChild(makeImg(item.small, '') || document.createTextNode('📦'));
+        const grayImage = needsGrayImage(item);
+        thumb.className = `thumb${grayImage ? ' gray-image-bg' : ''}`;
+        const thumbImg = makeImg(item.small, '');
+        if (thumbImg && grayImage) thumbImg.classList.add('gray-image-bg');
+        thumb.appendChild(thumbImg || document.createTextNode('📦'));
 
         const text = document.createElement('span');
         text.className = 'item-text';
@@ -414,6 +417,7 @@
         imgWrap.classList.toggle('gray-image-bg', needsGrayImage(item));
         imgWrap.replaceChildren(Object.assign(document.createElement('img'), { id: 'd-img', alt: item.name }));
         const big = $('d-img');
+        big.classList.toggle('gray-image-bg', needsGrayImage(item));
         big.src = item.large || item.small;
         big.addEventListener('error', () => { if (big.src !== item.small && item.small) big.src = item.small; }, { once: true });
 
