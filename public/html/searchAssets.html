@@ -23,6 +23,7 @@
                     <li><a href="../../index.html">Home</a></li>
                     <li><a href="./deviceMeshs.html">DeviceMeshs</a></li>
                     <li><a href="./searchAssets.html" aria-current="page">SearchAssets</a></li>
+                    <li><a href="./aiChat.html">AIChat</a></li>
                     <li><a href="./items.html">Items</a></li>
                     <li><a href="./convert.html">Convert</a></li>
                     <li><a href="./pathModifier.html">PathModifier</a></li>
@@ -53,6 +54,15 @@
                     <input type="checkbox" id="addC">
                     <label for="addC" data-i18n="sa.addC">Add _C</label>
                 </div>
+
+                <label class="sort-group" for="asset-sort">
+                    <span data-i18n="sa.sort">Sort</span>
+                    <select id="asset-sort">
+                        <option value="added-desc" data-i18n="sa.sort.added-desc">Added order</option>
+                        <option value="name-asc" data-i18n="sa.sort.name-asc">A → Z</option>
+                        <option value="name-desc" data-i18n="sa.sort.name-desc">Z → A</option>
+                    </select>
+                </label>
 
                 <div class="search-actions">
                     <button class="search-btn" id="search-btn" data-i18n="sa.search">Search</button>

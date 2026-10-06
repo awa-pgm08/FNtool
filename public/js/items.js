@@ -53,6 +53,11 @@
         return img;
     }
 
+    function needsGrayImage(item) {
+        return ['emote', 'spray', 'decal'].includes(String(item.group || '').toLowerCase())
+            || /emote|decal|spray/i.test(`${item.type || ''} ${item.name || ''}`);
+    }
+
     // ── Status line ──────────────────────────────────────────
     function renderStatus() {
         const dot = `<span class="live-dot ${S.online ? '' : 'off'}"></span>`;
@@ -147,7 +152,7 @@
         btn.dataset.id = item.id;
 
         const thumb = document.createElement('span');
-        thumb.className = 'thumb';
+        thumb.className = `thumb${needsGrayImage(item) ? ' gray-image-bg' : ''}`;
         thumb.appendChild(makeImg(item.small, '') || document.createTextNode('📦'));
 
         const text = document.createElement('span');
@@ -406,6 +411,7 @@
 
         // header
         const imgWrap = $('d-img').parentElement;
+        imgWrap.classList.toggle('gray-image-bg', needsGrayImage(item));
         imgWrap.replaceChildren(Object.assign(document.createElement('img'), { id: 'd-img', alt: item.name }));
         const big = $('d-img');
         big.src = item.large || item.small;

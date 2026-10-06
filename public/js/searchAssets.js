@@ -14,6 +14,7 @@ const el = {
     keywords:  $('keywords'),
     formatted: $('formatted'),
     addC:      $('addC'),
+    sort:      $('asset-sort'),
     results:   $('results'),
     count:     $('results-count'),
     loading:   $('loading'),
@@ -146,7 +147,7 @@ function renderChunk() {
 }
 
 function renderAll(newRows, html) {
-    rows = newRows;
+    rows = sortRows(newRows);
     shown = 0;
     el.results.innerHTML = '';
     el.count.innerHTML = html;
@@ -157,6 +158,15 @@ function renderAll(newRows, html) {
         return;
     }
     renderChunk();
+}
+
+function sortRows(input) {
+    const out = [...input];
+    const mode = el.sort?.value || 'added-desc';
+    if (mode === 'name-asc') return out.sort((a, b) => a.raw.localeCompare(b.raw, undefined, { sensitivity: 'base' }));
+    if (mode === 'name-desc') return out.sort((a, b) => b.raw.localeCompare(a.raw, undefined, { sensitivity: 'base' }));
+    // The upstream asset files are append-ordered; New AS rows carry real dates.
+    return out.sort((a, b) => (b.added || b.sourceIndex || 0) - (a.added || a.sourceIndex || 0));
 }
 
 // Re-render (not re-search) when the display options change.
@@ -198,7 +208,7 @@ async function searchAssets() {
             return keywords.every(k => l.includes(k));
         });
         renderAll(
-            matches.map(raw => ({ raw })),
+            matches.map((raw, sourceIndex) => ({ raw, sourceIndex })),
             resultsHtml('sa.results', { n: matches.length.toLocaleString() })
         );
     } catch (e) {
@@ -228,7 +238,7 @@ async function buildNewAs() {
         const paths = found.get(item.id.toLowerCase());
         if (!paths) { missing++; continue; }
         for (const raw of paths) {
-            out.push({ raw, meta: `${item.name} · ${item.id} · ${fmtDate(item.added)}`, search: (raw + ' ' + item.search).toLowerCase() });
+            out.push({ raw, added: item.added, meta: `${item.name} · ${item.id} · ${fmtDate(item.added)}`, search: (raw + ' ' + item.search).toLowerCase() });
         }
     }
     newAsCache = { rows: out, cosmetics: recent.length, missing };
@@ -342,7 +352,7 @@ async function scanUploadedFiles() {
                 }
             }
         }
-        const fileRows = [...matches].map(([raw, names]) => ({ raw, meta: [...names].join(', ') }));
+        const fileRows = [...matches].map(([raw, names], sourceIndex) => ({ raw, sourceIndex, meta: [...names].join(', ') }));
         fileScanActive = true;
         renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
         el.copyAllBtn.hidden = fileRows.length === 0;
@@ -398,6 +408,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('ft:langchange', () => { if (rows.length) rerender(); el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() }); });
     el.formatted.addEventListener('change', rerender);
     el.addC.addEventListener('change', rerender);
+    el.sort.addEventListener('change', () => { if (rows.length) renderAll(rows, el.count.innerHTML); });
 
     renderFileList();
     FT.assets.load('all').catch(() => FT.ui.toast('Failed to load fortnite_assets.gz'));

@@ -64,7 +64,7 @@ FT.i18n = (() => {
 
             'sa.all': 'All', 'sa.new': 'New', 'sa.assetList': 'Asset list',
             'sa.keywords': 'Keywords separated by spaces or commas',
-            'sa.formatted': 'Formatted', 'sa.addC': 'Add _C', 'sa.search': 'Search', 'sa.newAs': 'New AS',
+            'sa.formatted': 'Formatted', 'sa.addC': 'Add _C', 'sa.sort': 'Sort', 'sa.sort.added-desc': 'Added order', 'sa.sort.name-asc': 'Name A → Z', 'sa.sort.name-desc': 'Name Z → A', 'sa.search': 'Search', 'sa.newAs': 'New AS',
             'sa.newAsTip': 'Assets of cosmetics added in the last 7 days',
             'sa.searching': 'Searching...', 'sa.assetPath': 'Asset Path', 'sa.showMore': 'Show more ({n} left)', 'sa.showAll': 'Show all',
             'sa.needKeyword': 'Enter at least one keyword', 'sa.loadFail': 'Failed to load the asset list',
@@ -138,7 +138,7 @@ FT.i18n = (() => {
 
             'sa.all': 'すべて', 'sa.new': '新着', 'sa.assetList': 'アセット一覧',
             'sa.keywords': 'キーワード（スペースまたはカンマ区切り）',
-            'sa.formatted': '整形済み', 'sa.addC': '_C を付ける', 'sa.search': '検索', 'sa.newAs': '新着AS',
+            'sa.formatted': '整形済み', 'sa.addC': '_C を付ける', 'sa.sort': '並び替え', 'sa.sort.added-desc': '追加順', 'sa.sort.name-asc': '名前 A → Z', 'sa.sort.name-desc': '名前 Z → A', 'sa.search': '検索', 'sa.newAs': '新着AS',
             'sa.newAsTip': '直近7日間に追加されたコスメティックのアセット',
             'sa.searching': '検索中...', 'sa.assetPath': 'アセットパス', 'sa.showMore': 'さらに表示（残り {n} 件）', 'sa.showAll': 'すべて表示',
             'sa.needKeyword': 'キーワードを1つ以上入力してください', 'sa.loadFail': 'アセット一覧の読み込みに失敗しました',

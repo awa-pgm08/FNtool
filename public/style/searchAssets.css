@@ -22,6 +22,8 @@
 #keywords { flex: 1; min-width: 220px; font-family: var(--mono); font-size: 13px; }
 .checkbox-group { display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; }
 .checkbox-group label { cursor: pointer; }
+.sort-group { display: flex; align-items: center; gap: 8px; white-space: nowrap; color: var(--fg-mute); font-size: 12px; }
+.sort-group select { min-height: 36px; padding: 6px 10px; font-size: 12px; }
 .search-actions { display: flex; gap: 8px; }
 .file-upload-btn { position: relative; overflow: hidden; }
 .file-upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
