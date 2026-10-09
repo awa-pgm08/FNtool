@@ -202,13 +202,20 @@ async function searchAssets() {
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
-        const assets = await FT.assets.load(currentList);
+        const [assets, cosmetics] = await Promise.all([
+            FT.assets.load(currentList),
+            FT.cosmetics.loadAll(FT.i18n.lang).catch(() => []),
+        ]);
+        const addedById = new Map(cosmetics.map(item => [String(item.id).toLowerCase(), item.added]));
         const matches = assets.filter(p => {
             const l = p.toLowerCase();
             return keywords.every(k => l.includes(k));
         });
         renderAll(
-            matches.map((raw, sourceIndex) => ({ raw, sourceIndex })),
+            matches.map((raw, sourceIndex) => {
+                const added = addedById.get(assetIdFromPath(raw));
+                return { raw, sourceIndex, added, meta: addedMeta(added) };
+            }),
             resultsHtml('sa.results', { n: matches.length.toLocaleString() })
         );
     } catch (e) {
@@ -221,6 +228,8 @@ async function searchAssets() {
 
 // ── New AS: last 7 days ──────────────────────────────────────
 const fmtDate = ts => new Date(ts).toLocaleDateString(FT.i18n.lang === 'ja' ? 'ja-JP' : undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+const assetIdFromPath = raw => raw.slice(raw.lastIndexOf('/') + 1).replace(/\.(?:uasset|umap)$/i, '').toLowerCase();
+const addedMeta = ts => `${t('sa.added')}: ${ts ? fmtDate(ts) : '—'}`;
 
 async function buildNewAs() {
     if (newAsCache) return newAsCache;
