@@ -414,7 +414,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const text = rows.map(r => el.formatted.checked ? FT.assets.formatPath(r.raw, el.addC.checked) : r.raw).join('\n');
         FT.ui.copy(text, el.copyAllBtn);
     });
-    document.addEventListener('ft:langchange', () => { if (rows.length) rerender(); el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() }); });
+    document.addEventListener('ft:langchange', () => {
+        rows.forEach(row => { if (Object.prototype.hasOwnProperty.call(row, 'added')) row.meta = addedMeta(row.added); });
+        if (rows.length) rerender();
+        el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() });
+    });
     el.formatted.addEventListener('change', rerender);
     el.addC.addEventListener('change', rerender);
     el.sort.addEventListener('change', () => { if (rows.length) renderAll(rows, el.count.innerHTML); });
