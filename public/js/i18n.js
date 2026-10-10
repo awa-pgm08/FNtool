@@ -18,8 +18,8 @@ FT.i18n = (() => {
             'title.home': 'Fortnite Tools', 'title.items': 'Items · Fortnite Tools', 'title.searchAssets': 'Search Assets · Fortnite Tools',
             'title.convert': 'Convert · Fortnite Tools', 'title.deviceMeshs': 'DeviceMeshs · Fortnite Tools',
             'title.pathModifier': 'PathModifier · Fortnite Tools', 'title.id': 'Id · Fortnite Tools',
-            'footer.help': 'If you have any problems, my Discord server is: <a href="производство">awa Community</a>.',
-            'footer.helpApi': 'If you have any problems, my Discord server is: <a href="производство">awa Community</a>. Item data: <a href="https://fortnite-api.com" target="_blank" rel="noopener">Fortnite-API</a>.',
+            'footer.help': '-',
+            'footer.helpApi': '-',
             'lang.label': 'Language', 'top': 'Back to top',
 
             'home.h2': 'Tools for Fortnite creators and datamining',
@@ -92,8 +92,8 @@ FT.i18n = (() => {
             'title.home': 'Fortnite Tools', 'title.items': 'アイテム · Fortnite Tools', 'title.searchAssets': 'アセット検索 · Fortnite Tools',
             'title.convert': '変換 · Fortnite Tools', 'title.deviceMeshs': 'デバイスメッシュ · Fortnite Tools',
             'title.pathModifier': 'パス変換 · Fortnite Tools', 'title.id': 'ID · Fortnite Tools',
-            'footer.help': '問題がある場合は、Discordサーバーまでご連絡ください：<a href="производство">awa Community</a>',
-            'footer.helpApi': '問題がある場合は、Discordサーバーまでご連絡ください：<a href="производство">awa Community</a>　アイテムデータ：<a href="https://fortnite-api.com" target="_blank" rel="noopener">Fortnite-API</a>',
+            'footer.help': '-',
+            'footer.helpApi': '-',
             'lang.label': '言語', 'top': 'ページの先頭へ',
 
             'home.h2': 'Fortniteクリエイターとデータマイニングのためのツール',
