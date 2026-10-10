@@ -207,8 +207,9 @@ fetch('../data/devicemeshs.json')
 
                         const nameCell = document.createElement('div');
                         nameCell.className = 'setting-name';
-                        nameCell.textContent = settingName;
-                        attachTooltip(nameCell, settingName);
+                        const displaySettingName = settingName || 'Default';
+                        nameCell.textContent = displaySettingName;
+                        attachTooltip(nameCell, displaySettingName);
 
                         const fieldsCell = document.createElement('div');
                         fieldsCell.className = 'setting-fields';
@@ -223,12 +224,14 @@ fetch('../data/devicemeshs.json')
 
                         const keyText = document.createElement('span');
                         keyText.className = 'field-text';
-                        keyText.textContent = settingData['option key'] || '';
-                        attachTooltip(keyText, settingData['option key'] || '');
+                        const optionKey = settingData['option key'] || '';
+                        keyText.textContent = optionKey || '-';
+                        keyText.classList.toggle('field-empty', !optionKey);
+                        attachTooltip(keyText, optionKey || '');
 
                         keyLine.appendChild(keyTag);
                         keyLine.appendChild(keyText);
-                        keyLine.appendChild(makeCopyBtn(settingData['option key'] || ''));
+                        if (optionKey) keyLine.appendChild(makeCopyBtn(optionKey));
 
                         // Value line
                         const valLine = document.createElement('div');
@@ -236,16 +239,18 @@ fetch('../data/devicemeshs.json')
 
                         const valTag = document.createElement('span');
                         valTag.className = 'field-tag';
-                        valTag.textContent = 'Val';
+                        valTag.textContent = 'Value';
 
                         const valText = document.createElement('span');
                         valText.className = 'field-text';
-                        valText.textContent = settingData.value || '';
-                        attachTooltip(valText, settingData.value || '');
+                        const settingValue = settingData.value || '';
+                        valText.textContent = settingValue || '-';
+                        valText.classList.toggle('field-empty', !settingValue);
+                        attachTooltip(valText, settingValue || '');
 
                         valLine.appendChild(valTag);
                         valLine.appendChild(valText);
-                        valLine.appendChild(makeCopyBtn(settingData.value || ''));
+                        if (settingValue) valLine.appendChild(makeCopyBtn(settingValue));
 
                         fieldsCell.appendChild(keyLine);
                         fieldsCell.appendChild(valLine);
