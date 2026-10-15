@@ -353,6 +353,20 @@ const AssetIndex = {
     async find(id) {
         return (await FT.assets.findById(id))[0] ?? null;
     },
+    /** Animation assets associated with an EID, used when export APIs are unavailable. */
+    async findEmoteAnimations(id) {
+        const name = String(id).replace(/^EID_/i, '').toLowerCase();
+        const { exact, related } = await FT.assets.findContaining(name);
+        return [...exact, ...related]
+            .filter(path => /(?:^|\/)Animation\/Game\/MainPlayer\/Emotes\//i.test(path))
+            .filter(path => !/\/Montages\//i.test(path))
+            .filter(path => new RegExp(`(?:^|[\\/_-])${name}(?:[._/-]|$)`, 'i').test(path))
+            .sort((a, b) => {
+                // Prefer the usual male animation, then a plain animation asset.
+                const rank = p => /_M\.uasset$/i.test(p) ? 0 : /\/[^/]+\.uasset$/i.test(p) ? 1 : 2;
+                return rank(a) - rank(b) || a.localeCompare(b);
+            });
+    },
 };
 
 // The Convert page warms the index up early; other pages that reuse these
@@ -520,7 +534,16 @@ async function emoteToAnimation(input) {
     }
 
     const anim = data?.jsonOutput?.[0];
-    if (!anim) return null;
+    if (!anim) {
+        // Export services can be temporarily unavailable or missing mappings.
+        // The local asset index still contains the animation object paths.
+        const localAnimations = await AssetIndex.findEmoteAnimations(input);
+        if (!localAnimations.length) return null;
+        return {
+            male: FT.assets.formatPath(localAnimations[0]),
+            female: 'None',
+        };
+    }
     return {
         male:   anim.Properties?.Animation?.AssetPathName              ?? 'None',
         female: anim.Properties?.AnimationFemaleOverride?.AssetPathName ?? 'None',
