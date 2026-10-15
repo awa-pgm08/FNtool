@@ -532,7 +532,12 @@ function err(el, msg) { setResult(el, `❌ ${msg}`, 'error'); }
 // ── 1. Emote → Animation ─────────────────────────────────────────────────────
 async function emoteToAnimation(input) {
     let assetPath = await resolveAssetPath(input);
-    if (!assetPath) return null;
+    if (!assetPath) {
+        const localAnimations = await AssetIndex.findEmoteAnimations(input);
+        return localAnimations.length
+            ? { male: FT.assets.formatPath(localAnimations[0]), female: 'None' }
+            : null;
+    }
 
     let data = await fetchExportData(assetPath);
 
