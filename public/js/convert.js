@@ -476,6 +476,15 @@ async function resolveAssetPath(itemId, { preferDefinitionPath = true } = {}) {
         if (raw) return convertExportPath(raw);
     } catch { /* fall through */ }
 
+    // fortniteapi.io is unavailable for some browsers/regions. Use the
+    // public Fortnite-API endpoint before falling back to the local index.
+    try {
+        const res = await fetch(`https://fortnite-api.com/v2/cosmetics/br/${encodeURIComponent(itemId)}?responseFlags=7`);
+        const json = await res.json();
+        const raw = json?.data?.path ?? json?.data?.definitionPath ?? null;
+        if (raw) return convertExportPath(raw);
+    } catch { /* fall through */ }
+
     // Fallback: local asset index
     return AssetIndex.find(itemId);
 }
