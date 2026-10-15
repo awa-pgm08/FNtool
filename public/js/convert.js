@@ -531,12 +531,16 @@ function err(el, msg) { setResult(el, `❌ ${msg}`, 'error'); }
 
 // ── 1. Emote → Animation ─────────────────────────────────────────────────────
 async function emoteToAnimation(input) {
+    // Resolve known animation objects directly first. This avoids depending on
+    // the cosmetic metadata API, which may omit older EIDs or be unavailable.
+    const localAnimations = await AssetIndex.findEmoteAnimations(input);
+    if (localAnimations.length) {
+        return { male: FT.assets.formatPath(localAnimations[0]), female: 'None' };
+    }
+
     let assetPath = await resolveAssetPath(input);
     if (!assetPath) {
-        const localAnimations = await AssetIndex.findEmoteAnimations(input);
-        return localAnimations.length
-            ? { male: FT.assets.formatPath(localAnimations[0]), female: 'None' }
-            : null;
+        return null;
     }
 
     let data = await fetchExportData(assetPath);
