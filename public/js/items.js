@@ -17,7 +17,7 @@
     const t = (k, v) => FT.i18n.t(k, v);
 
     const dom = {
-        q: $('q'), cats: $('cats'), rarity: $('rarity'), sort: $('sort'), reset: $('reset'),
+        q: $('q'), cats: $('cats'), stow: $('stow-categories'), rarity: $('rarity'), sort: $('sort'), reset: $('reset'),
         recent: $('recent'), refresh: $('refresh'), status: $('status'),
         list: $('list'), sentinel: $('sentinel'), state: $('state'),
         dlg: $('detail'),
@@ -38,6 +38,10 @@
         lastCheck: null,
         online: true,
         loading: false,
+        catsStowed: false,
+        catsAnimating: false,
+        stowedChips: [],
+        stowOrder: [],
     };
 
     // ── Helpers ──────────────────────────────────────────────
@@ -106,6 +110,11 @@
         }
         // drop selections that no longer exist
         for (const g of [...S.cats]) if (!groups.has(g)) S.cats.delete(g);
+        if (S.catsStowed) {
+            S.stowedChips = [...dom.cats.children];
+            S.stowOrder = [...S.stowedChips];
+            dom.cats.replaceChildren();
+        }
 
         const prev = dom.rarity.value;
         dom.rarity.length = 1;
@@ -199,6 +208,69 @@
         if (entries.some(e => e.isIntersecting) && S.rendered < S.view.length) renderMore();
     }, { rootMargin: '800px' });
     io.observe(dom.sentinel);
+
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const nextFrame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    async function toggleCategoryStow() {
+        if (S.catsAnimating) return;
+        S.catsAnimating = true;
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const button = dom.stow;
+        const br = button.getBoundingClientRect();
+        const origin = { x: br.left + br.width / 2, y: br.top + br.height / 2 };
+        try {
+            if (!S.catsStowed) {
+                const chips = [...dom.cats.querySelectorAll('.chip')];
+                S.stowedChips = chips;
+                S.stowOrder = chips.map((chip, index) => {
+                    const r = chip.getBoundingClientRect();
+                    return { chip, index, d: Math.hypot(r.left + r.width / 2 - origin.x, r.top + r.height / 2 - origin.y) };
+                }).sort((a, b) => a.d - b.d || a.index - b.index).map(x => x.chip);
+                S.catsStowed = true;
+                button.setAttribute('aria-expanded', 'false');
+                button.textContent = t('items.unstow');
+                for (const chip of S.stowOrder) {
+                    const r = chip.getBoundingClientRect();
+                    const dx = origin.x - r.left - r.width / 2, dy = origin.y - r.top - r.height / 2;
+                    if (!reduced && chip.animate) {
+                        const animation = chip.animate([
+                            { transform: 'translate(0,0) scale(1)', opacity: 1, filter: 'blur(0)' },
+                            { transform: `translate(${dx}px,${dy}px) scale(.12)`, opacity: 0, filter: 'blur(5px)' },
+                        ], { duration: 360, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+                        await animation.finished.catch(() => {});
+                    }
+                    chip.remove();
+                    if (!reduced) await wait(35);
+                }
+            } else {
+                dom.cats.replaceChildren(...S.stowedChips);
+                for (const chip of S.stowedChips) { chip.style.opacity = '0'; chip.style.transform = 'scale(.12)'; }
+                await nextFrame();
+                S.catsStowed = false;
+                button.setAttribute('aria-expanded', 'true');
+                button.textContent = t('items.stow');
+                for (const chip of S.stowOrder) {
+                    const r = chip.getBoundingClientRect();
+                    const dx = origin.x - r.left - r.width / 2, dy = origin.y - r.top - r.height / 2;
+                    if (!reduced && chip.animate) {
+                        const animation = chip.animate([
+                            { transform: `translate(${dx}px,${dy}px) scale(.12)`, opacity: 0, filter: 'blur(5px)' },
+                            { transform: 'translate(0,0) scale(1)', opacity: 1, filter: 'blur(0)' },
+                        ], { duration: 360, easing: 'cubic-bezier(.22,1,.36,1)' });
+                        await animation.finished.catch(() => {});
+                    }
+                    chip.style.opacity = '';
+                    chip.style.transform = '';
+                    if (!reduced) await wait(35);
+                }
+                S.stowedChips = [];
+                S.stowOrder = [];
+            }
+        } finally {
+            S.catsAnimating = false;
+        }
+    }
 
     function clearFilters() {
         dom.q.value = ''; dom.rarity.value = ''; S.cats.clear();
@@ -486,6 +558,7 @@
         chip.setAttribute('aria-pressed', String(S.cats.has(g)));
         applyFilters();
     });
+    dom.stow.addEventListener('click', toggleCategoryStow);
     dom.reset.addEventListener('click', clearFilters);
     dom.recent.addEventListener('click', () => {
         const on = dom.recent.getAttribute('aria-pressed') !== 'true';
@@ -511,6 +584,8 @@
     // site-wide language switch → reload item names in that language
     document.addEventListener('ft:langchange', e => {
         S.lang = e.detail;
+        dom.stow.textContent = t(S.catsStowed ? 'items.unstow' : 'items.stow');
+        dom.stow.setAttribute('aria-expanded', String(!S.catsStowed));
         renderStatus();
         const reopen = S.openId;
         load().then(() => { if (reopen && S.byId.has(reopen)) openDetail(reopen); });
