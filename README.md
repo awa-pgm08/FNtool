@@ -9,6 +9,13 @@ Static site (no build step). Serve the folder with any static host, e.g. `python
 - **Automatic data sync** – GitHub Actions checks `awa/FortniteToolsWeb` every 6 hours and updates the four files in `public/data` automatically. It can also be started manually from the Actions tab.
 - **Convert / DeviceMeshs / PathModifier / Id** – unchanged features, new black & white theme.
 
+## Sidebar
+All pages use a glass sidebar menu instead of the top header (the old header markup stays in the HTML as a no-JS fallback and is hidden when the sidebar loads).
+- `public/js/sidebar.js` – builds the menu, active-page highlight, collapse (saved in `localStorage` as `ft.sb`), menu filter, language toggle, mobile drawer. Set `DISCORD_URL` at the top to show the Discord row.
+- `public/style/sidebar.css` – glass styling and page layout offset (`--sbw`). Mobile (≤760px) uses a drawer opened by the round menu button.
+- `public/images/sidebar-bg.jpg` – backdrop behind the glass.
+- To add a page: add an entry to `ITEMS` in `sidebar.js` and the `nav.*` key in `i18n.js`.
+
 ## Structure
 - `public/style/common.css` – shared theme (light/dark follows the OS)
 - `public/js/assetLib.js` – asset list loading + path formatting (shared)

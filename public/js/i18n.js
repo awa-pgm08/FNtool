@@ -21,6 +21,7 @@ FT.i18n = (() => {
             'footer.help': '-',
             'footer.helpApi': '-',
             'lang.label': 'Language', 'top': 'Back to top',
+            'sb.menu': 'Menu', 'sb.search': 'Search', 'sb.collapse': 'Collapse sidebar', 'sb.expand': 'Expand sidebar', 'sb.open': 'Open menu', 'sb.discord': 'Join Discord', 'sb.lang': 'Language: English',
 
             'home.h2': 'Tools for Fortnite creators and datamining',
             'home.p': 'Look up cosmetics, find asset paths, and convert IDs into the paths you need.',
@@ -95,6 +96,7 @@ FT.i18n = (() => {
             'footer.help': '-',
             'footer.helpApi': '-',
             'lang.label': '言語', 'top': 'ページの先頭へ',
+            'sb.menu': 'メニュー', 'sb.search': '検索', 'sb.collapse': 'サイドバーを閉じる', 'sb.expand': 'サイドバーを開く', 'sb.open': 'メニューを開く', 'sb.discord': 'Discordに参加', 'sb.lang': '言語: 日本語',
 
             'home.h2': 'Fortniteクリエイターとデータマイニングのためのツール',
             'home.p': 'コスメティックの検索、アセットパスの検索、IDから必要なパスへの変換ができます。',
