@@ -531,13 +531,6 @@ function err(el, msg) { setResult(el, `❌ ${msg}`, 'error'); }
 
 // ── 1. Emote → Animation ─────────────────────────────────────────────────────
 async function emoteToAnimation(input) {
-    // Resolve known animation objects directly first. This avoids depending on
-    // the cosmetic metadata API, which may omit older EIDs or be unavailable.
-    const localAnimations = await AssetIndex.findEmoteAnimations(input);
-    if (localAnimations.length) {
-        return { male: FT.assets.formatPath(localAnimations[0]), female: 'None' };
-    }
-
     let assetPath = await resolveAssetPath(input);
     if (!assetPath) {
         return null;
@@ -552,16 +545,10 @@ async function emoteToAnimation(input) {
     }
 
     const anim = data?.jsonOutput?.[0];
-    if (!anim) {
-        // Export services can be temporarily unavailable or missing mappings.
-        // The local asset index still contains the animation object paths.
-        const localAnimations = await AssetIndex.findEmoteAnimations(input);
-        if (!localAnimations.length) return null;
-        return {
-            male: FT.assets.formatPath(localAnimations[0]),
-            female: 'None',
-        };
-    }
+    // Do not infer an animation from a similar filename. The upstream data
+    // intentionally omits some EID relationships, so only verified exports
+    // are allowed to produce a result.
+    if (!anim) return null;
     return {
         male:   anim.Properties?.Animation?.AssetPathName              ?? 'None',
         female: anim.Properties?.AnimationFemaleOverride?.AssetPathName ?? 'None',
