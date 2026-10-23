@@ -418,6 +418,9 @@
     // Heuristic paths are shown only when a matching asset path is missing.
     let prediction = null;
     const hasPathValue = value => Boolean(value && !/^(?:none|null|undefined|n\/a)$/i.test(String(value).trim()));
+    const characterSlug = id => String(id || '').trim()
+        .replace(/^Character_/i, '')
+        .replace(/[^A-Za-z0-9_]/g, '');
 
     function renderEidPredictions(value) {
         const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
@@ -542,12 +545,13 @@
 
         // EID → conversions
         const isEmote = /^EID_/i.test(item.id);
-        const isCharacter = /^CID_/i.test(item.id);
+        const isCharacter = /^(?:CID_|Character_)/i.test(item.id)
+            || item.group === 'outfit' || item.typeValue === 'outfit';
         $('d-convert').hidden = !isEmote;
         prediction = null;
         $('d-predict').hidden = true;
         if (isEmote) startPrediction('eid', item.id.replace(/^EID_/i, ''), item.id);
-        else if (isCharacter) startPrediction('character', item.id, item.id);
+        else if (isCharacter) startPrediction('character', characterSlug(item.id), item.id);
         else {
             $('eid-predict-input').value = '';
             $('eid-predict-input').closest('.eid-predict-field').hidden = true;
