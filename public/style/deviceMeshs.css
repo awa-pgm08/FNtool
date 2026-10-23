@@ -1,6 +1,33 @@
 /* DeviceMeshs page */
 #showAllToggle { display: flex; margin: 20px auto 0; }
 
+.mesh-api-panel {
+    width: 94%; max-width: 1440px; margin: 24px auto 14px; padding: 18px;
+    border: 1px solid var(--line-strong); border-radius: 14px; background: var(--bg-soft);
+}
+.mesh-api-panel [hidden] { display: none !important; }
+.mesh-api-heading h2 { margin: 0 0 5px; font-size: 20px; }
+.mesh-api-heading p, .mesh-api-note { margin: 0; color: var(--fg-soft); font-size: 13px; line-height: 1.5; }
+.mesh-api-note { margin-top: 7px; color: var(--fg-mute); font-size: 12px; }
+.mesh-api-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+.mesh-api-version-label, .mesh-api-search { display: grid; gap: 5px; color: var(--fg-soft); font-size: 12px; }
+.mesh-api-version-label select, .mesh-api-search input {
+    min-height: 38px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius);
+    background: var(--bg); color: var(--fg); font: inherit;
+}
+.mesh-api-version-label select { min-width: 210px; }
+.mesh-api-search { margin-top: 12px; }
+.mesh-api-search input { width: 100%; }
+.mesh-api-status { min-height: 20px; margin: 12px 0 0; color: var(--fg-soft); font-size: 12px; }
+.mesh-api-status[data-state="error"] { color: var(--danger, #d44); }
+.mesh-api-summary { margin: 0 0 8px; color: var(--fg-mute); font-size: 12px; }
+.mesh-api-file-list { display: grid; gap: 6px; max-height: 520px; overflow: auto; }
+.mesh-api-file-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.mesh-api-file-path { min-width: 0; overflow-wrap: anywhere; color: var(--fg); font: 11px/1.5 var(--mono); }
+.mesh-api-file-actions { display: flex; gap: 6px; align-items: center; }
+.mesh-api-copy, .mesh-api-download { min-height: 32px; padding: 5px 9px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--bg-soft); color: var(--fg); font: 11px var(--sans); text-decoration: none; white-space: nowrap; cursor: pointer; }
+.mesh-api-copy:hover, .mesh-api-download:hover { background: var(--invert-bg); color: var(--invert-fg); }
+
 #meshDiv {
     width: 94%; max-width: 1440px;
     margin: 20px auto 80px;
@@ -53,5 +80,5 @@
 }
 #searchInput.active { width: 240px; padding: 8px 14px; border-width: 1px; border-color: var(--line-strong); opacity: 1; }
 
-@media (max-width: 900px) { #meshDiv { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); width: 96%; } }
-@media (max-width: 720px) { #meshDiv { grid-template-columns: 1fr; margin-bottom: 100px; } #searchInput.active { width: 190px; } }
+@media (max-width: 900px) { #meshDiv { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); width: 96%; } .mesh-api-panel { width: 96%; } }
+@media (max-width: 720px) { #meshDiv { grid-template-columns: 1fr; margin-bottom: 100px; } #searchInput.active { width: 190px; } .mesh-api-panel { padding: 12px; } .mesh-api-file-row { grid-template-columns: minmax(0, 1fr); } .mesh-api-file-actions { justify-content: flex-start; } }
