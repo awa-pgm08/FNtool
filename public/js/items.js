@@ -406,6 +406,31 @@
         }
     }
 
+    // Heuristic paths for animation/character assets that may not exist in the converter data.
+    function renderEidPredictions(value) {
+        const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
+        const paths = {
+            male: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM_M.Emote_${slug}_CMM_M` : '',
+            female: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMF/Emote_${slug}_CMF_M.Emote_${slug}_CMF_M` : '',
+            character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.${slug}` : '',
+        };
+        for (const [kind, path] of Object.entries(paths)) $( `eid-predict-${kind}` ).textContent = path;
+        $('eid-predict').classList.toggle('is-empty', !slug);
+        return paths;
+    }
+
+    $('eid-predict-input').addEventListener('input', e => {
+        const cleaned = e.currentTarget.value.trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
+        if (cleaned !== e.currentTarget.value) e.currentTarget.value = cleaned;
+        renderEidPredictions(cleaned);
+    });
+    $('d-convert').addEventListener('click', e => {
+        const button = e.target.closest('[data-predict-copy]');
+        if (!button) return;
+        const path = $(`eid-predict-${button.dataset.predictCopy}`).textContent;
+        if (path) ui.copy(path, button);
+    });
+
     function openDetail(id) {
         const item = S.byId.get(id);
         if (!item) return;
@@ -446,6 +471,8 @@
         // EID → conversions
         const isEmote = /^EID_/i.test(item.id);
         $('d-convert').hidden = !isEmote;
+        $('eid-predict-input').value = isEmote ? item.id.replace(/^EID_/i, '') : '';
+        renderEidPredictions($('eid-predict-input').value);
         if (isEmote) {
             runConvert('r-anim', token, t('items.fetchAnim'), () => emoteToAnimation(item.id),
                 r => [{ tag: t('items.male'), value: r.male }, { tag: t('items.female'), value: r.female }]);
