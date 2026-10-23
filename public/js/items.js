@@ -303,16 +303,23 @@
         return frag;
     }
 
-    async function runConvert(boxId, token, loadingMsg, fn, toEntries) {
+    async function runConvert(boxId, token, loadingMsg, fn, toEntries, onResult = () => {}) {
         const box = resultBox(boxId);
         setBox(box, 'loading', loadingMsg);
         try {
             const result = await fn();
             if (token !== openToken) return;            // another item was opened meanwhile
-            if (!result) return setBox(box, 'error', t('items.noData'));
+            if (!result) {
+                onResult(null);
+                return setBox(box, 'error', t('items.noData'));
+            }
+            onResult(result);
             setBox(box, 'success', linesEl(toEntries(result)));
         } catch (e) {
-            if (token === openToken) setBox(box, 'error', e.message || t('items.error'));
+            if (token === openToken) {
+                onResult(null);
+                setBox(box, 'error', e.message || t('items.error'));
+            }
         }
     }
 
@@ -397,16 +404,21 @@
             if (token !== openToken) return;
             A.exact = exact; A.related = related; A.item = item;
             renderAssets();
+            syncPredictionsWithAssets(item.id, true, token);
         } catch (e) {
             if (token !== openToken) return;
             host.replaceChildren();
             const err = document.createElement('div');
             setBox(err, 'error', t('items.assetFail'));
             host.appendChild(err);
+            syncPredictionsWithAssets(item.id, false, token);
         }
     }
 
-    // Heuristic paths for animation/character assets that may not exist in the converter data.
+    // Heuristic paths are shown only when a matching asset path is missing.
+    let prediction = null;
+    const hasPathValue = value => Boolean(value && !/^(?:none|null|undefined|n\/a)$/i.test(String(value).trim()));
+
     function renderEidPredictions(value) {
         const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
         const paths = {
@@ -414,21 +426,81 @@
             female: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMF/Emote_${slug}_CMF_M.Emote_${slug}_CMF_M` : '',
             character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.${slug}` : '',
         };
-        for (const [kind, path] of Object.entries(paths)) $( `eid-predict-${kind}` ).textContent = path;
-        $('eid-predict').classList.toggle('is-empty', !slug);
+        for (const [kind, path] of Object.entries(paths)) $(`eid-predict-${kind}`).textContent = path;
+        if (prediction) prediction.slug = slug;
         return paths;
+    }
+
+    function updatePredictionVisibility() {
+        if (!prediction) { $('d-predict').hidden = true; return; }
+        const kinds = prediction.type === 'eid' ? ['male', 'female'] : ['character'];
+        let shown = 0;
+        for (const kind of ['male', 'female', 'character']) {
+            const row = $(`eid-predict-${kind}`).closest('.eid-predict-row');
+            const visible = kinds.includes(kind) && prediction.ready && !prediction.available[kind]
+                && hasPathValue($(`eid-predict-${kind}`).textContent);
+            row.hidden = !visible;
+            if (visible) shown++;
+        }
+        $('d-predict').hidden = shown === 0;
+    }
+
+    function assetsContainPrediction(kind, slug) {
+        const paths = [...A.exact, ...A.related].map(path => String(path).replace(/\\/g, '/').toLowerCase());
+        if (kind === 'character') {
+            const target = `/characters/character_${slug}.`.toLowerCase();
+            return paths.some(path => path.includes(target));
+        }
+        const gender = kind === 'male' ? 'cmm' : 'cmf';
+        const name = `emote_${slug}_${gender}_m`.toLowerCase();
+        return paths.some(path => path.includes(name));
+    }
+
+    async function syncPredictionsWithAssets(itemId, loaded, token) {
+        if (!prediction || prediction.itemId !== itemId) return;
+        const current = prediction;
+        const kinds = prediction.type === 'eid' ? ['male', 'female'] : ['character'];
+        if (loaded) {
+            const found = await Promise.all(kinds.map(async kind => {
+                const query = kind === 'character'
+                    ? `Character_${current.slug}`
+                    : `Emote_${current.slug}_${kind === 'male' ? 'CMM' : 'CMF'}_M`;
+                const matches = await FT.assets.findContaining(query);
+                return [kind, matches.exact.length + matches.related.length > 0];
+            }));
+            if (token !== openToken || prediction !== current) return;
+            for (const [kind, exists] of found) {
+                if (exists || assetsContainPrediction(kind, current.slug)) current.available[kind] = true;
+            }
+        }
+        if (current.type === 'character') current.ready = true;
+        updatePredictionVisibility();
+    }
+
+    function startPrediction(type, value, itemId) {
+        const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
+        prediction = { type, slug, itemId, ready: false, manual: false, available: { male: false, female: false, character: false } };
+        $('d-predict').hidden = true;
+        $('eid-predict-input').value = slug;
+        $('eid-predict-input').closest('.eid-predict-field').hidden = type !== 'eid';
+        renderEidPredictions(slug);
+        updatePredictionVisibility();
     }
 
     $('eid-predict-input').addEventListener('input', e => {
         const cleaned = e.currentTarget.value.trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
         if (cleaned !== e.currentTarget.value) e.currentTarget.value = cleaned;
+        if (!prediction || prediction.type !== 'eid') return;
+        prediction.slug = cleaned;
+        prediction.ready = prediction.ready && Boolean(cleaned);
         renderEidPredictions(cleaned);
+        updatePredictionVisibility();
     });
-    $('d-convert').addEventListener('click', e => {
+    $('d-predict').addEventListener('click', e => {
         const button = e.target.closest('[data-predict-copy]');
         if (!button) return;
         const path = $(`eid-predict-${button.dataset.predictCopy}`).textContent;
-        if (path) ui.copy(path, button);
+        if (path && !button.closest('.eid-predict-row').hidden) ui.copy(path, button);
     });
 
     function openDetail(id) {
@@ -470,12 +542,34 @@
 
         // EID → conversions
         const isEmote = /^EID_/i.test(item.id);
+        const isCharacter = /^CID_/i.test(item.id);
         $('d-convert').hidden = !isEmote;
-        $('eid-predict-input').value = isEmote ? item.id.replace(/^EID_/i, '') : '';
-        renderEidPredictions($('eid-predict-input').value);
+        prediction = null;
+        $('d-predict').hidden = true;
+        if (isEmote) startPrediction('eid', item.id.replace(/^EID_/i, ''), item.id);
+        else if (isCharacter) startPrediction('character', item.id, item.id);
+        else {
+            $('eid-predict-input').value = '';
+            $('eid-predict-input').closest('.eid-predict-field').hidden = true;
+            renderEidPredictions('');
+        }
         if (isEmote) {
+            setTimeout(() => {
+                if (token !== openToken || !prediction || prediction.itemId !== item.id || prediction.ready) return;
+                prediction.ready = true;
+                prediction.available.male = assetsContainPrediction('male', prediction.slug);
+                prediction.available.female = assetsContainPrediction('female', prediction.slug);
+                updatePredictionVisibility();
+            }, 5000);
             runConvert('r-anim', token, t('items.fetchAnim'), () => emoteToAnimation(item.id),
-                r => [{ tag: t('items.male'), value: r.male }, { tag: t('items.female'), value: r.female }]);
+                r => [{ tag: t('items.male'), value: r.male }, { tag: t('items.female'), value: r.female }],
+                result => {
+                    if (!prediction || prediction.itemId !== item.id) return;
+                    prediction.ready = true;
+                    prediction.available.male = prediction.available.male || hasPathValue(result?.male) || assetsContainPrediction('male', prediction.slug);
+                    prediction.available.female = prediction.available.female || hasPathValue(result?.female) || assetsContainPrediction('female', prediction.slug);
+                    updatePredictionVisibility();
+                });
             runConvert('r-seq', token, t('items.fetchSeq'), () => emoteToSequenceAnimation(item.id),
                 r => [{ value: r }]);
             runConvert('r-audio', token, t('items.fetchAudio'), () => emoteToAudio(item.id),

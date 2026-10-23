@@ -100,6 +100,7 @@
 .eid-predict-note { margin-bottom: 8px; }
 .eid-predict-results { display: grid; gap: 7px; }
 .eid-predict-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); }
+.eid-predict-row[hidden] { display: none; }
 .eid-predict-row strong { color: var(--fg-soft); font-size: 11px; }
 .eid-predict-row code { min-width: 0; color: var(--fg); font: 11px/1.55 var(--mono); overflow-wrap: anywhere; }
 .eid-predict-row .btn { align-self: center; }

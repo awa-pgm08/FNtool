@@ -103,8 +103,15 @@
 
             <section id="d-convert" hidden>
                 <h3 data-i18n="items.convert">Convert</h3>
+                <div class="res" id="r-anim"><h4 data-i18n="items.anim">Emote to Animation</h4><div class="result-box"></div></div>
+                <div class="res" id="r-seq"><h4 data-i18n="items.seq">Emote to Sequence Animation</h4><div class="result-box"></div></div>
+                <div class="res" id="r-audio"><h4 data-i18n="items.audio">Emote to Audio</h4><div class="result-box"></div></div>
+            </section>
+
+            <section id="d-predict" hidden>
+                <h3 data-i18n="items.predictSection">Predicted paths (only when missing)</h3>
                 <div class="eid-predict" id="eid-predict">
-                    <h4 data-i18n="items.predictTitle">Predict animation and character paths</h4>
+                    <h4 data-i18n="items.predictTitle">Predict missing asset paths</h4>
                     <p class="eid-predict-hint" data-i18n="items.predictHint">Paste the part after EID_ (example: RadarDigitGloom).</p>
                     <label class="eid-predict-field">
                         <span data-i18n="items.predictInput">Name after EID_</span>
@@ -117,9 +124,6 @@
                         <div class="eid-predict-row"><strong data-i18n="items.predictCharacter">Character</strong><code id="eid-predict-character"></code><button type="button" class="btn btn-small" data-predict-copy="character" data-i18n="common.copy">Copy</button></div>
                     </div>
                 </div>
-                <div class="res" id="r-anim"><h4 data-i18n="items.anim">Emote to Animation</h4><div class="result-box"></div></div>
-                <div class="res" id="r-seq"><h4 data-i18n="items.seq">Emote to Sequence Animation</h4><div class="result-box"></div></div>
-                <div class="res" id="r-audio"><h4 data-i18n="items.audio">Emote to Audio</h4><div class="result-box"></div></div>
             </section>
 
             <section id="d-assets">
