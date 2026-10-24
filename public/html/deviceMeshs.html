@@ -36,6 +36,31 @@
         </div>
     </header>
     <main>
+        <section id="meshApiPanel" class="mesh-api-panel" aria-labelledby="meshApiTitle">
+            <div class="mesh-api-heading">
+                <h2 id="meshApiTitle" data-i18n="meshApi.title">Versioned Mesh Files</h2>
+                <p data-i18n="meshApi.description">Browse mesh assets from FortniteAPI by game version, then download individual files.</p>
+            </div>
+            <p class="mesh-api-note" data-i18n="meshApi.note">Only mesh-like .uasset packages from the selected version’s indexed PAKs are listed.</p>
+            <div class="mesh-api-controls">
+                <label class="mesh-api-version-label" for="meshApiVersion">
+                    <span data-i18n="meshApi.version">Game version</span>
+                    <select id="meshApiVersion" disabled><option>Loading…</option></select>
+                </label>
+                <button id="meshApiLoad" class="btn" type="button" disabled data-i18n="meshApi.load">Load mesh files</button>
+                <button id="meshApiExport" class="btn" type="button" hidden data-i18n="meshApi.export">Export JSON</button>
+                <button id="meshApiRetry" class="btn btn-small" type="button" hidden data-i18n="meshApi.retry">Retry versions</button>
+            </div>
+            <label id="meshApiSearchWrap" class="mesh-api-search" hidden>
+                <span data-i18n="meshApi.searchLabel">Filter files</span>
+                <input id="meshApiSearch" type="search" autocomplete="off" data-i18n-placeholder="meshApi.searchPlaceholder" placeholder="Search mesh paths…" disabled>
+            </label>
+            <p id="meshApiStatus" class="mesh-api-status" role="status" aria-live="polite" data-i18n="meshApi.loadingVersions">Loading FortniteAPI versions…</p>
+            <div id="meshApiResults" class="mesh-api-results" hidden>
+                <p id="meshApiSummary" class="mesh-api-summary"></p>
+                <div id="meshApiFileList" class="mesh-api-file-list"></div>
+            </div>
+        </section>
         <button id="showAllToggle">👁 Show All</button>
         <div id="meshDiv"></div>
     </main>
@@ -46,5 +71,6 @@
     <script src="https://kit.fontawesome.com/1d1c3ac163.js" crossorigin="anonymous"></script>
     <script src="../js/i18n.js"></script>
     <script src="../js/deviceMeshs.js"></script>
+    <script src="../js/versionedMeshes.js"></script>
 </body>
 </html>
