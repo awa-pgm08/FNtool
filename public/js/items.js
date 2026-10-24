@@ -427,7 +427,7 @@
         const paths = {
             male: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM_M.Emote_${slug}_CMM_M` : '',
             female: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMF/Emote_${slug}_CMF_M.Emote_${slug}_CMF_M` : '',
-            character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.${slug}` : '',
+            character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.Character_${slug}` : '',
         };
         for (const [kind, path] of Object.entries(paths)) $(`eid-predict-${kind}`).textContent = path;
         if (prediction) prediction.slug = slug;
