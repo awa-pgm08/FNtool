@@ -25,6 +25,11 @@ const el = {
     newAsBtn:  $('new-as-btn'),
     allTab:    $('all-assets-btn'),
     newTab:    $('new-assets-btn'),
+    latestMeshTab: $('latest-meshes-btn'),
+    meshControls: $('mesh-latest-controls'),
+    meshStatus: $('mesh-latest-status'),
+    refreshMeshBtn: $('refresh-mesh-btn'),
+    exportMeshBtn: $('export-mesh-json-btn'),
     files:     $('asset-files'),
     fileList:  $('file-list'),
     copyAllBtn: $('copy-all-btn'),
@@ -32,10 +37,14 @@ const el = {
     fileStatus: $('file-status'),
 };
 
-let currentList = 'all';   // 'all' | 'new'  (which .gz file the tabs point at)
+let currentList = 'all';   // 'all' | 'new' | 'mesh'
 let rows = [];             // [{ raw, meta? }]  — what is currently displayed
 let shown = 0;
 let newAsCache = null;     // { rows, cosmetics, missing }
+let meshResultMode = false;
+let latestMeshData = null;
+let latestMeshVersion = null;
+let meshRequestId = 0;
 let selectedFiles = [];
 let fileScanActive = false;
 
@@ -128,7 +137,22 @@ function makeRow(index, { raw, meta }) {
     copyBtn.setAttribute('aria-label', t('sa.copyPath'));
     copyBtn.addEventListener('click', () => FT.ui.copy(display, copyBtn));
 
-    actions.append(viewBtn, copyBtn);
+    if (meshResultMode) {
+        if (/\.uasset$/i.test(raw) && latestMeshVersion) {
+            const downloadBtn = document.createElement('a');
+            downloadBtn.className = 'mesh-download-btn';
+            downloadBtn.href = FT.versionedMeshes.downloadUrl(raw, latestMeshVersion);
+            downloadBtn.target = '_blank';
+            downloadBtn.rel = 'noopener noreferrer';
+            downloadBtn.textContent = '⬇';
+            downloadBtn.title = t('sa.meshDownload');
+            downloadBtn.setAttribute('aria-label', t('sa.meshDownload'));
+            actions.appendChild(downloadBtn);
+        }
+    } else {
+        actions.appendChild(viewBtn);
+    }
+    actions.appendChild(copyBtn);
     cell.append(main, actions);
     td.appendChild(cell);
     tr.append(tdIdx, td);
@@ -146,18 +170,20 @@ function renderChunk() {
     el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() });
 }
 
-function renderAll(newRows, html) {
+function renderAll(newRows, html, showAllRows = meshResultMode) {
     rows = sortRows(newRows);
     shown = 0;
     el.results.innerHTML = '';
     el.count.innerHTML = html;
     if (!rows.length) {
-        el.results.innerHTML = `<tr class="empty-row"><td colspan="2">${FT.ui.esc(t('sa.none'))}</td></tr>`;
+        const emptyText = meshResultMode ? t('sa.meshNone') : t('sa.none');
+        el.results.innerHTML = `<tr class="empty-row"><td colspan="2">${FT.ui.esc(emptyText)}</td></tr>`;
         el.showMore.hidden = true;
         el.showAll.hidden = true;
         return;
     }
     renderChunk();
+    if (showAllRows) while (shown < rows.length) renderChunk();
 }
 
 function sortRows(input) {
@@ -190,22 +216,58 @@ function resultsHtml(key, vars) {
 }
 
 // ── Normal search ────────────────────────────────────────────
-async function searchAssets() {
-    if (selectedFiles.length) {
-        await scanUploadedFiles();
+async function searchAssets(forceMeshRefresh = false) {
+    const requestId = ++meshRequestId;
+    if (selectedFiles.length && currentList !== 'mesh') {
+        await scanUploadedFiles(requestId);
         return;
     }
     const keywords = getKeywords();
-    if (!keywords.length) { el.keywords.focus(); FT.ui.toast(t('sa.needKeyword')); return; }
+    const meshMode = currentList === 'mesh';
+    if (!keywords.length && !meshMode) { el.keywords.focus(); FT.ui.toast(t('sa.needKeyword')); return; }
 
-    setLoading(true, t('sa.searching'));
+    setLoading(true, meshMode ? t('sa.meshLoading') : t('sa.searching'));
+    if (meshMode) el.refreshMeshBtn.disabled = true;
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
+        if (meshMode) {
+            latestMeshData = await FT.versionedMeshes.loadLatest({ force: forceMeshRefresh });
+            if (requestId !== meshRequestId || currentList !== 'mesh') return;
+            latestMeshVersion = latestMeshData.version;
+            meshResultMode = true;
+            const matches = latestMeshData.files.filter(path => {
+                const lower = path.toLowerCase();
+                return keywords.every(keyword => lower.includes(keyword));
+            });
+            const meshRows = matches.map((raw, sourceIndex) => ({
+                raw,
+                sourceIndex,
+                meta: t('sa.meshMeta', { version: latestMeshVersion }),
+            }));
+            const summaryKey = latestMeshData.failed ? 'sa.meshPartial' : 'sa.meshResults';
+            renderAll(meshRows, resultsHtml(summaryKey, {
+                n: meshRows.length.toLocaleString(),
+                version: latestMeshVersion,
+                failed: latestMeshData.failed,
+            }), true);
+            el.copyAllBtn.hidden = meshRows.length === 0;
+            el.exportMeshBtn.hidden = meshRows.length === 0;
+            el.meshStatus.textContent = latestMeshData.failed
+                ? t('sa.meshPartial', { n: meshRows.length.toLocaleString(), version: latestMeshVersion, failed: latestMeshData.failed })
+                : t('sa.meshStatusReady', { version: latestMeshVersion, paks: latestMeshData.paks });
+            el.meshStatus.dataset.state = latestMeshData.failed ? 'error' : '';
+            return;
+        }
+
+        meshResultMode = false;
+        latestMeshVersion = null;
+        el.exportMeshBtn.hidden = true;
         const [assets, cosmetics] = await Promise.all([
             FT.assets.load(currentList),
             FT.cosmetics.loadAll(FT.i18n.lang).catch(() => []),
         ]);
+        if (requestId !== meshRequestId || currentList === 'mesh') return;
         const addedById = new Map(cosmetics.map(item => [String(item.id).toLowerCase(), item.added]));
         const matches = assets.filter(p => {
             const l = p.toLowerCase();
@@ -219,10 +281,20 @@ async function searchAssets() {
             resultsHtml('sa.results', { n: matches.length.toLocaleString() })
         );
     } catch (e) {
+        if (requestId !== meshRequestId) return;
         console.error(e);
-        FT.ui.toast(t('sa.loadFail'));
+        if (meshMode) {
+            el.meshStatus.textContent = t('sa.meshFail');
+            el.meshStatus.dataset.state = 'error';
+            FT.ui.toast(t('sa.meshFail'));
+        } else {
+            FT.ui.toast(t('sa.loadFail'));
+        }
     } finally {
-        setLoading(false);
+        if (requestId === meshRequestId) {
+            setLoading(false);
+            el.refreshMeshBtn.disabled = false;
+        }
     }
 }
 
@@ -255,11 +327,21 @@ async function buildNewAs() {
 }
 
 async function showNewAssets() {
+    const requestId = ++meshRequestId;
+    currentList = 'new';
+    el.allTab.classList.remove('active');
+    el.newTab.classList.add('active');
+    el.latestMeshTab.classList.remove('active');
+    meshResultMode = false;
+    latestMeshVersion = null;
+    el.meshControls.hidden = true;
+    el.exportMeshBtn.hidden = true;
     setLoading(true, t('sa.findingNew'));
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
         const data = await buildNewAs();
+        if (requestId !== meshRequestId) return;
         const keywords = getKeywords();
         const list = keywords.length ? data.rows.filter(r => keywords.every(k => r.search.includes(k))) : data.rows;
 
@@ -271,7 +353,7 @@ async function showNewAssets() {
         newAsCache = null;
         FT.ui.toast(t('sa.apiFail'));
     } finally {
-        setLoading(false);
+        if (requestId === meshRequestId) setLoading(false);
     }
 }
 
@@ -338,7 +420,11 @@ function renderFileList() {
     el.clearFilesBtn.hidden = !hasFiles;
 }
 
-async function scanUploadedFiles() {
+async function scanUploadedFiles(requestId = ++meshRequestId) {
+    meshResultMode = false;
+    latestMeshVersion = null;
+    el.meshControls.hidden = true;
+    el.exportMeshBtn.hidden = true;
     if (!selectedFiles.length) {
         el.fileStatus.textContent = t('sa.noFiles');
         FT.ui.toast(t('sa.noFiles'));
@@ -350,6 +436,7 @@ async function scanUploadedFiles() {
             FT.assets.load('all'),
             Promise.all(selectedFiles.map(async file => ({ name: file.name, text: await file.text() }))),
         ]);
+        if (requestId !== meshRequestId) return;
         const index = buildFileAssetIndex(assets);
         const matches = new Map();
         for (const file of texts) {
@@ -372,7 +459,7 @@ async function scanUploadedFiles() {
         el.fileStatus.textContent = t('sa.fileReadFail');
         FT.ui.toast(t('sa.fileReadFail'));
     } finally {
-        setLoading(false);
+        if (requestId === meshRequestId) setLoading(false);
     }
 }
 
@@ -386,22 +473,69 @@ function clearUploadedFiles() {
     fileScanActive = false;
 }
 
-// ── Tabs (All / New file) ────────────────────────────────────
+function exportLatestMeshList() {
+    if (!meshResultMode || !latestMeshData) return;
+    const payload = {
+        source: 'https://api.fortniteapi.com',
+        version: latestMeshVersion,
+        matchingTerms: ['SM', 'mesh'],
+        paksScanned: latestMeshData.paks,
+        failedPaks: latestMeshData.failed,
+        paths: rows.map(row => row.raw),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = `fortnite-sm-mesh-paths-${latestMeshVersion}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    el.meshStatus.textContent = t('sa.meshExported');
+}
+
+// ── Tabs (All / New / latest FortniteAPI meshes) ─────────────
 async function switchAssetList(type) {
+    const wasMesh = currentList === 'mesh';
     currentList = type;
+    if (type !== 'mesh') meshRequestId++;
     el.allTab.classList.toggle('active', type === 'all');
     el.newTab.classList.toggle('active', type === 'new');
-    if (getKeywords().length) await searchAssets();
-    else FT.assets.load(type).catch(() => {});   // warm the cache
+    el.latestMeshTab.classList.toggle('active', type === 'mesh');
+    el.meshControls.hidden = type !== 'mesh';
+    if (type === 'mesh') {
+        el.keywords.value = '';
+        await searchAssets();
+    } else if (getKeywords().length) {
+        await searchAssets();
+    } else if (wasMesh) {
+        meshResultMode = false;
+        latestMeshVersion = null;
+        el.exportMeshBtn.hidden = true;
+        el.copyAllBtn.hidden = true;
+        el.results.innerHTML = '';
+        el.count.textContent = '';
+        el.showMore.hidden = true;
+        el.showAll.hidden = true;
+        setLoading(false);
+    } else {
+        meshResultMode = false;
+        FT.assets.load(type).catch(() => {});   // warm the cache
+        setLoading(false);
+    }
 }
 
 // ── Wire up ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-    el.searchBtn.addEventListener('click', searchAssets);
+    el.searchBtn.addEventListener('click', () => searchAssets());
     el.newAsBtn.addEventListener('click', showNewAssets);
     el.keywords.addEventListener('keydown', e => { if (e.key === 'Enter') searchAssets(); });
     el.allTab.addEventListener('click', () => switchAssetList('all'));
     el.newTab.addEventListener('click', () => switchAssetList('new'));
+    el.latestMeshTab.addEventListener('click', () => switchAssetList('mesh'));
+    el.refreshMeshBtn.addEventListener('click', () => searchAssets(true));
+    el.exportMeshBtn.addEventListener('click', exportLatestMeshList);
     el.showMore.addEventListener('click', renderChunk);
     el.showAll.addEventListener('click', () => { while (shown < rows.length) renderChunk(); });
     el.files.addEventListener('change', () => {
@@ -416,6 +550,21 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('ft:langchange', () => {
         rows.forEach(row => { if (Object.prototype.hasOwnProperty.call(row, 'added')) row.meta = addedMeta(row.added); });
+        if (currentList === 'mesh' && el.meshStatus.dataset.state === 'error' && !latestMeshData?.failed) {
+            el.meshStatus.textContent = t('sa.meshFail');
+        } else if (currentList === 'mesh' && !meshResultMode) {
+            el.meshStatus.textContent = t('sa.meshHint');
+        }
+        if (meshResultMode && latestMeshData) {
+            rows.forEach(row => { row.meta = t('sa.meshMeta', { version: latestMeshVersion }); });
+            const summaryKey = latestMeshData.failed ? 'sa.meshPartial' : 'sa.meshResults';
+            el.count.innerHTML = resultsHtml(summaryKey, {
+                n: rows.length.toLocaleString(), version: latestMeshVersion, failed: latestMeshData.failed,
+            });
+            el.meshStatus.textContent = latestMeshData.failed
+                ? t('sa.meshPartial', { n: rows.length.toLocaleString(), version: latestMeshVersion, failed: latestMeshData.failed })
+                : t('sa.meshStatusReady', { version: latestMeshVersion, paks: latestMeshData.paks });
+        }
         if (rows.length) rerender();
         el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() });
     });

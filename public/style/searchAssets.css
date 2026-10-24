@@ -25,6 +25,12 @@
 .sort-group { display: flex; align-items: center; gap: 8px; width: 100%; white-space: nowrap; color: var(--fg-mute); font-size: 12px; }
 .sort-group select { min-height: 36px; padding: 6px 10px; font-size: 12px; }
 .search-actions { display: flex; gap: 8px; }
+.mesh-latest-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: -2px 0 14px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); }
+.mesh-latest-controls[hidden], .mesh-latest-controls .btn[hidden] { display: none !important; }
+#mesh-latest-status { flex: 1 1 100%; margin: 0; color: var(--fg-soft); font-size: 12px; }
+#mesh-latest-status[data-state="error"] { color: var(--danger, #d44); }
+.mesh-download-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; padding: 4px 7px; border: 1px solid var(--line-strong); border-radius: 6px; color: var(--fg); background: var(--bg-soft); text-decoration: none; font-size: 12px; }
+.mesh-download-btn:hover { background: var(--invert-bg); color: var(--invert-fg); }
 .file-upload-btn { position: relative; overflow: hidden; }
 .file-upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .file-cancel-btn { min-width: 40px; padding-left: 10px; padding-right: 10px; font-size: 20px; line-height: 1; }
