@@ -112,12 +112,9 @@
                 <h3 data-i18n="items.predictSection">Predicted paths (only when missing)</h3>
                 <div class="eid-predict" id="eid-predict">
                     <h4 data-i18n="items.predictTitle">Predict missing asset paths</h4>
-                    <p class="eid-predict-hint" data-i18n="items.predictHint">Paste the part after EID_ (example: RadarDigitGloom).</p>
                     <label class="eid-predict-field">
-                        <span data-i18n="items.predictInput">Name after EID_</span>
-                        <input id="eid-predict-input" type="text" autocomplete="off" spellcheck="false" placeholder="RadarDigitGloom" data-i18n-placeholder="items.predictPlaceholder">
+                        <input id="eid-predict-input" type="text" autocomplete="off" spellcheck="false" aria-label="EID_ の後ろの名前">
                     </label>
-                    <p class="eid-predict-note" data-i18n="items.predictNote">These are name-based estimates; verify the paths against asset data.</p>
                     <div class="eid-predict-results" aria-live="polite">
                         <div class="eid-predict-row"><strong data-i18n="items.male">Male</strong><code id="eid-predict-male"></code><button type="button" class="btn btn-small" data-predict-copy="male" data-i18n="common.copy">Copy</button></div>
                         <div class="eid-predict-row"><strong data-i18n="items.female">Female</strong><code id="eid-predict-female"></code><button type="button" class="btn btn-small" data-predict-copy="female" data-i18n="common.copy">Copy</button></div>
