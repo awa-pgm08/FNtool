@@ -427,6 +427,8 @@
         const paths = {
             male: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM_M.Emote_${slug}_CMM_M` : '',
             female: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMF/Emote_${slug}_CMF_M.Emote_${slug}_CMF_M` : '',
+            sequence: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM.Emote_${slug}_CMM` : '',
+            audio: slug ? `/BRCosmetics/Sounds/Emotes/${slug}/Emote_${slug}_Music.Emote_${slug}_Music` : '',
             character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.Character_${slug}` : '',
         };
         for (const [kind, path] of Object.entries(paths)) $(`eid-predict-${kind}`).textContent = path;
@@ -436,9 +438,9 @@
 
     function updatePredictionVisibility() {
         if (!prediction) { $('d-predict').hidden = true; return; }
-        const kinds = prediction.type === 'eid' ? ['male', 'female'] : ['character'];
+        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : ['character'];
         let shown = 0;
-        for (const kind of ['male', 'female', 'character']) {
+        for (const kind of ['male', 'female', 'sequence', 'audio', 'character']) {
             const row = $(`eid-predict-${kind}`).closest('.eid-predict-row');
             const visible = kinds.includes(kind) && prediction.ready && !prediction.available[kind]
                 && hasPathValue($(`eid-predict-${kind}`).textContent);
@@ -454,20 +456,25 @@
             const target = `/characters/character_${slug}.`.toLowerCase();
             return paths.some(path => path.includes(target));
         }
-        const gender = kind === 'male' ? 'cmm' : 'cmf';
-        const name = `emote_${slug}_${gender}_m`.toLowerCase();
+        const name = kind === 'male' ? `emote_${slug}_cmm_m`.toLowerCase()
+            : kind === 'female' ? `emote_${slug}_cmf_m`.toLowerCase()
+            : kind === 'sequence' ? `emote_${slug}_cmm.`.toLowerCase()
+            : `emote_${slug}_music.`.toLowerCase();
         return paths.some(path => path.includes(name));
     }
 
     async function syncPredictionsWithAssets(itemId, loaded, token) {
         if (!prediction || prediction.itemId !== itemId) return;
         const current = prediction;
-        const kinds = prediction.type === 'eid' ? ['male', 'female'] : ['character'];
+        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : ['character'];
         if (loaded) {
             const found = await Promise.all(kinds.map(async kind => {
                 const query = kind === 'character'
                     ? `Character_${current.slug}`
-                    : `Emote_${current.slug}_${kind === 'male' ? 'CMM' : 'CMF'}_M`;
+                    : kind === 'male' ? `Emote_${current.slug}_CMM_M`
+                    : kind === 'female' ? `Emote_${current.slug}_CMF_M`
+                    : kind === 'sequence' ? `Emote_${current.slug}_CMM.Emote_${current.slug}_CMM`
+                    : `Emote_${current.slug}_Music.Emote_${current.slug}_Music`;
                 const matches = await FT.assets.findContaining(query);
                 return [kind, matches.exact.length + matches.related.length > 0];
             }));
@@ -482,7 +489,7 @@
 
     function startPrediction(type, value, itemId) {
         const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
-        prediction = { type, slug, itemId, ready: false, manual: false, available: { male: false, female: false, character: false } };
+        prediction = { type, slug, itemId, ready: false, manual: false, available: { male: false, female: false, sequence: false, audio: false, character: false } };
         $('d-predict').hidden = true;
         $('eid-predict-input').value = slug;
         $('eid-predict-input').closest('.eid-predict-field').hidden = type !== 'eid';
