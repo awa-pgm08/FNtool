@@ -14,7 +14,6 @@ const el = {
     keywords:  $('keywords'),
     formatted: $('formatted'),
     addC:      $('addC'),
-    season:    $('season-filter'),
     sort:      $('asset-sort'),
     results:   $('results'),
     count:     $('results-count'),
@@ -39,7 +38,6 @@ let shown = 0;
 let newAsCache = null;     // { rows, cosmetics, missing }
 let selectedFiles = [];
 let fileScanActive = false;
-let lastAction = 'search';
 const cosmeticsCache = new Map();
 
 function cosmeticsFor(lang = FT.i18n.lang) {
@@ -50,41 +48,6 @@ function cosmeticsFor(lang = FT.i18n.lang) {
         }));
     }
     return cosmeticsCache.get(lang);
-}
-
-function seasonInfo(item) {
-    const intro = String(item.intro || '');
-    const chapterText = intro.match(/(?:chapter|チャプター)\s*(\d+)/i) || intro.match(/第\s*(\d+)\s*章/);
-    const seasonText = intro.match(/(?:season|シーズン)\s*(\d+)/i);
-    const asNumber = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
-    const chapter = asNumber(item.chapter) ?? (chapterText ? Number(chapterText[1]) : null);
-    const season = asNumber(item.season) ?? (seasonText ? Number(seasonText[1]) : null);
-    if (season === null) return null;
-    const key = chapter === null ? `S${season}` : `C${chapter}S${season}`;
-    const label = seasonLabel(key);
-    return { key, label, order: (chapter || 0) * 100 + season };
-}
-
-function seasonLabel(key) {
-    const match = String(key).match(/^(?:C(\d+))?S(\d+)$/);
-    if (!match) return '';
-    const [, chapter, season] = match;
-    return FT.i18n.lang === 'ja'
-        ? `${chapter ? `チャプター${chapter} ` : ''}シーズン${season}`
-        : `${chapter ? `Chapter ${chapter}, ` : ''}Season ${season}`;
-}
-
-function fillSeasonOptions(items) {
-    const selected = el.season.value;
-    const seasons = new Map();
-    for (const item of items) {
-        const info = seasonInfo(item);
-        if (info && !seasons.has(info.key)) seasons.set(info.key, info);
-    }
-    el.season.replaceChildren(new Option(t('sa.allSeasons'), ''));
-    [...seasons.values()].sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
-        .forEach(info => el.season.add(new Option(info.label, info.key)));
-    el.season.value = seasons.has(selected) ? selected : '';
 }
 
 function setLoading(on, text = t('sa.searching')) {
@@ -246,11 +209,9 @@ function resultsHtml(key, vars) {
 // ── Normal search ────────────────────────────────────────────
 async function searchAssets() {
     if (selectedFiles.length) {
-        lastAction = 'files';
         await scanUploadedFiles();
         return;
     }
-    lastAction = 'search';
     const keywords = getKeywords();
     if (!keywords.length) { el.keywords.focus(); FT.ui.toast(t('sa.needKeyword')); return; }
 
@@ -262,17 +223,13 @@ async function searchAssets() {
             FT.assets.load(currentList),
             cosmeticsFor(FT.i18n.lang).catch(() => []),
         ]);
-        fillSeasonOptions(cosmetics);
-        const itemById = new Map(cosmetics.map(item => [String(item.id).toLowerCase(), item]));
-        const selectedSeason = el.season.value;
+        const addedById = new Map(cosmetics.map(item => [String(item.id).toLowerCase(), item.added]));
         const matches = [];
         assets.forEach((p, sourceIndex) => {
             const l = p.toLowerCase();
             if (!keywords.every(k => l.includes(k))) return;
-            const item = itemById.get(assetIdFromPath(p));
-            const season = item ? seasonInfo(item) : null;
-            if (selectedSeason && season?.key !== selectedSeason) return;
-            matches.push({ raw: p, sourceIndex, added: item?.added || 0, season, meta: addedMeta(item?.added, season) });
+            const added = addedById.get(assetIdFromPath(p));
+            matches.push({ raw: p, sourceIndex, added, meta: addedMeta(added) });
         });
         renderAll(
             matches,
@@ -289,13 +246,12 @@ async function searchAssets() {
 // ── New AS: last 7 days ──────────────────────────────────────
 const fmtDate = ts => new Date(ts).toLocaleDateString(FT.i18n.lang === 'ja' ? 'ja-JP' : undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 const assetIdFromPath = raw => raw.slice(raw.lastIndexOf('/') + 1).replace(/\.(?:uasset|umap)$/i, '').toLowerCase();
-const addedMeta = (ts, season) => [ts ? `${t('sa.added')}: ${fmtDate(ts)}` : '', season?.label || ''].filter(Boolean).join(' · ');
+const addedMeta = ts => `${t('sa.added')}: ${ts ? fmtDate(ts) : '—'}`;
 
 async function buildNewAs() {
     if (newAsCache) return newAsCache;
 
     const [cosmetics] = await Promise.all([cosmeticsFor(FT.i18n.lang), FT.assets.load('all')]);
-    fillSeasonOptions(cosmetics);
     const recent = cosmetics
         .filter(i => FT.cosmetics.isRecent(i, NEW_AS_DAYS))
         .sort((a, b) => b.added - a.added);
@@ -307,9 +263,8 @@ async function buildNewAs() {
     for (const item of recent) {
         const paths = found.get(item.id.toLowerCase());
         if (!paths) { missing++; continue; }
-        const season = seasonInfo(item);
         for (const raw of paths) {
-            out.push({ raw, added: item.added, season, cosmeticId: item.id, sourceIndex: out.length, meta: `${item.name} · ${item.id} · ${fmtDate(item.added)}${season ? ` · ${season.label}` : ''}`, search: (raw + ' ' + item.search).toLowerCase() });
+            out.push({ raw, added: item.added, sourceIndex: out.length, meta: `${item.name} · ${item.id} · ${fmtDate(item.added)}`, search: (raw + ' ' + item.search).toLowerCase() });
         }
     }
     newAsCache = { rows: out, cosmetics: recent.length, missing };
@@ -317,21 +272,15 @@ async function buildNewAs() {
 }
 
 async function showNewAssets() {
-    lastAction = 'new-as';
     setLoading(true, t('sa.findingNew'));
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
         const data = await buildNewAs();
         const keywords = getKeywords();
-        const selectedSeason = el.season.value;
-        const list = data.rows.filter(r => (!selectedSeason || r.season?.key === selectedSeason)
-            && (!keywords.length || keywords.every(k => r.search.includes(k))));
-        const cosmeticCount = selectedSeason
-            ? new Set(data.rows.filter(r => r.season?.key === selectedSeason).map(r => r.cosmeticId)).size
-            : data.cosmetics;
+        const list = keywords.length ? data.rows.filter(r => keywords.every(k => r.search.includes(k))) : data.rows;
 
-        let html = resultsHtml('sa.newSummary', { n: list.length.toLocaleString(), c: cosmeticCount.toLocaleString(), d: NEW_AS_DAYS });
+        let html = resultsHtml('sa.newSummary', { n: list.length.toLocaleString(), c: data.cosmetics.toLocaleString(), d: NEW_AS_DAYS });
         if (data.missing) html += ` <span>${FT.ui.esc(t('sa.missing', { m: data.missing }))}</span>`;
         renderAll(list, html);
     } catch (e) {
@@ -407,7 +356,6 @@ function renderFileList() {
 }
 
 async function scanUploadedFiles() {
-    lastAction = 'files';
     if (!selectedFiles.length) {
         el.fileStatus.textContent = t('sa.noFiles');
         FT.ui.toast(t('sa.noFiles'));
@@ -415,14 +363,10 @@ async function scanUploadedFiles() {
     }
     setLoading(true, t('sa.searching'));
     try {
-        const [assets, texts, cosmetics] = await Promise.all([
+        const [assets, texts] = await Promise.all([
             FT.assets.load('all'),
             Promise.all(selectedFiles.map(async file => ({ name: file.name, text: await file.text() }))),
-            cosmeticsFor(FT.i18n.lang).catch(() => []),
         ]);
-        fillSeasonOptions(cosmetics);
-        const itemById = new Map(cosmetics.map(item => [String(item.id).toLowerCase(), item]));
-        const selectedSeason = el.season.value;
         const index = buildFileAssetIndex(assets);
         const matches = new Map();
         for (const file of texts) {
@@ -434,11 +378,7 @@ async function scanUploadedFiles() {
                 }
             }
         }
-        const fileRows = [...matches].map(([raw, names], sourceIndex) => {
-            const item = itemById.get(assetIdFromPath(raw));
-            const season = item ? seasonInfo(item) : null;
-            return { raw, sourceIndex, added: item?.added || 0, season, meta: [...names, addedMeta(item?.added, season)].filter(Boolean).join(' · ') };
-        }).filter(row => !selectedSeason || row.season?.key === selectedSeason);
+        const fileRows = [...matches].map(([raw, names], sourceIndex) => ({ raw, sourceIndex, meta: [...names].join(', ') }));
         fileScanActive = true;
         renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
         el.copyAllBtn.hidden = fileRows.length === 0;
@@ -493,24 +433,14 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('ft:langchange', () => {
         newAsCache = null;
-        cosmeticsFor(FT.i18n.lang).then(fillSeasonOptions).catch(() => {});
-        rows.forEach(row => {
-            if (row.season) row.season.label = seasonLabel(row.season.key);
-            if (row.added || row.season) row.meta = addedMeta(row.added, row.season);
-        });
+        rows.forEach(row => { if (Object.prototype.hasOwnProperty.call(row, 'added')) row.meta = addedMeta(row.added); });
         if (rows.length) rerender();
         el.showMore.textContent = t('sa.showMore', { n: (rows.length - shown).toLocaleString() });
     });
     el.formatted.addEventListener('change', rerender);
     el.addC.addEventListener('change', rerender);
     el.sort.addEventListener('change', () => { if (rows.length) renderAll(rows, el.count.innerHTML); });
-    el.season.addEventListener('change', () => {
-        if (lastAction === 'new-as') showNewAssets();
-        else if (selectedFiles.length) scanUploadedFiles();
-        else if (getKeywords().length) searchAssets();
-    });
 
     renderFileList();
     FT.assets.load('all').catch(() => FT.ui.toast('Failed to load fortnite_assets.gz'));
-    cosmeticsFor(FT.i18n.lang).then(fillSeasonOptions).catch(() => {});
 });

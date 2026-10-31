@@ -53,8 +53,6 @@ FT.cosmetics = (() => {
             rarityRank: RARITY_RANK[r.rarity?.value] ?? 0,
             set: r.set?.value || '',
             intro: r.introduction?.text || '',
-            chapter: r.introduction?.chapter ?? null,
-            season: r.introduction?.season ?? null,
             added: r.added ? Date.parse(r.added) : 0,
             small,
             large: img.icon || img.featured || img.large || small,
