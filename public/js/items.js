@@ -430,6 +430,7 @@
             sequence: slug ? `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM.Emote_${slug}_CMM` : '',
             audio: slug ? `/BRCosmetics/Sounds/Emotes/${slug}/Emote_${slug}_Music.Emote_${slug}_Music` : '',
             character: slug ? `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.Character_${slug}` : '',
+            bean: slug ? `/BeanstalkCosmetics/Cosmetics/Def/CID/${slug}.${slug}` : '',
         };
         for (const [kind, path] of Object.entries(paths)) $(`eid-predict-${kind}`).textContent = path;
         if (prediction) prediction.slug = slug;
@@ -438,9 +439,9 @@
 
     function updatePredictionVisibility() {
         if (!prediction) { $('d-predict').hidden = true; return; }
-        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : ['character'];
+        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : [prediction.type];
         let shown = 0;
-        for (const kind of ['male', 'female', 'sequence', 'audio', 'character']) {
+        for (const kind of ['male', 'female', 'sequence', 'audio', 'character', 'bean']) {
             const row = $(`eid-predict-${kind}`).closest('.eid-predict-row');
             const visible = kinds.includes(kind) && prediction.ready && !prediction.available[kind]
                 && hasPathValue($(`eid-predict-${kind}`).textContent);
@@ -452,6 +453,10 @@
 
     function assetsContainPrediction(kind, slug) {
         const paths = [...A.exact, ...A.related].map(path => String(path).replace(/\\/g, '/').toLowerCase());
+        if (kind === 'bean') {
+            const target = `/beanstalkcosmetics/cosmetics/def/cid/${slug}.${slug}`.toLowerCase();
+            return paths.some(path => path.includes(target));
+        }
         if (kind === 'character') {
             const target = `/characters/character_${slug}.`.toLowerCase();
             return paths.some(path => path.includes(target));
@@ -466,10 +471,11 @@
     async function syncPredictionsWithAssets(itemId, loaded, token) {
         if (!prediction || prediction.itemId !== itemId) return;
         const current = prediction;
-        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : ['character'];
+        const kinds = prediction.type === 'eid' ? ['male', 'female', 'sequence', 'audio'] : [prediction.type];
         if (loaded) {
             const found = await Promise.all(kinds.map(async kind => {
-                const query = kind === 'character'
+                const query = kind === 'bean' ? `${current.slug}.${current.slug}`
+                    : kind === 'character'
                     ? `Character_${current.slug}`
                     : kind === 'male' ? `Emote_${current.slug}_CMM_M`
                     : kind === 'female' ? `Emote_${current.slug}_CMF_M`
@@ -483,13 +489,13 @@
                 if (exists || assetsContainPrediction(kind, current.slug)) current.available[kind] = true;
             }
         }
-        if (current.type === 'character') current.ready = true;
+        if (current.type !== 'eid') current.ready = true;
         updatePredictionVisibility();
     }
 
     function startPrediction(type, value, itemId) {
         const slug = String(value || '').trim().replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
-        prediction = { type, slug, itemId, ready: false, manual: false, available: { male: false, female: false, sequence: false, audio: false, character: false } };
+        prediction = { type, slug, itemId, ready: false, manual: false, available: { male: false, female: false, sequence: false, audio: false, character: false, bean: false } };
         $('d-predict').hidden = true;
         $('eid-predict-input').value = slug;
         $('eid-predict-input').closest('.eid-predict-field').hidden = type !== 'eid';
@@ -554,10 +560,12 @@
         const isEmote = /^EID_/i.test(item.id);
         const isCharacter = /^(?:CID_|Character_)/i.test(item.id)
             || item.group === 'outfit' || item.typeValue === 'outfit';
+        const isBean = item.category === 'beans' || /^Bean_/i.test(item.id);
         $('d-convert').hidden = !isEmote;
         prediction = null;
         $('d-predict').hidden = true;
         if (isEmote) startPrediction('eid', item.id.replace(/^EID_/i, ''), item.id);
+        else if (isBean) startPrediction('bean', item.id, item.id);
         else if (isCharacter) startPrediction('character', characterSlug(item.id), item.id);
         else {
             $('eid-predict-input').value = '';
