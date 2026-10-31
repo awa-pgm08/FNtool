@@ -20,6 +20,8 @@
     margin-bottom: 16px;
 }
 #keywords { flex: 1; min-width: 220px; font-family: var(--mono); font-size: 13px; }
+.season-group { display: flex; align-items: center; gap: 8px; white-space: nowrap; color: var(--fg-mute); font-size: 12px; }
+.season-group select { min-height: 36px; padding: 6px 10px; font-size: 12px; max-width: 240px; }
 .checkbox-group { display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; }
 .checkbox-group label { cursor: pointer; }
 .sort-group { display: flex; align-items: center; gap: 8px; width: 100%; white-space: nowrap; color: var(--fg-mute); font-size: 12px; }
