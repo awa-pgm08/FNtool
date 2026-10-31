@@ -37,8 +37,8 @@
         { f: null,              k: 'nav.home',         i: 'home' },
         { f: 'items.html',      k: 'nav.items',        i: 'items',   badge: true },
         { f: 'searchAssets.html', k: 'nav.searchAssets', i: 'search' },
-        { f: 'convert.html',    k: 'nav.convert',      i: 'convert' },
         { f: 'deviceMeshs.html', k: 'nav.deviceMeshs', i: 'dev' },
+        { f: 'convert.html',    k: 'nav.convert',      i: 'convert' },
         { f: 'pathModifier.html', k: 'nav.pathModifier', i: 'path' },
         { f: 'id.html',         k: 'nav.id',           i: 'id' }
     ];

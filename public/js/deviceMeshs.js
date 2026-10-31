@@ -99,6 +99,14 @@ fetch('../data/devicemeshs.json')
     .then(data => {
         Object.entries(data)
             .sort(([a], [b]) => {
+                const priority = ['Character Device (V2)', 'Guard Spawner (V2)', 'Explosive Device', 'Chair', 'Collectible Object', 'Carryable Spawner'];
+                const aPriority = priority.indexOf(a);
+                const bPriority = priority.indexOf(b);
+                if (aPriority !== -1 || bPriority !== -1) {
+                    if (aPriority === -1) return 1;
+                    if (bPriority === -1) return -1;
+                    return aPriority - bPriority;
+                }
                 const aL = /^[a-zA-Z]/.test(a);
                 const bL = /^[a-zA-Z]/.test(b);
                 if (aL && !bL) return -1;
