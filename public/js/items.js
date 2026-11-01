@@ -605,6 +605,111 @@
 
     function closeDetail() { openToken++; S.openId = null; dom.dlg.close(); }
 
+    function resolveQuickEmoteId(value) {
+        const input = String(value || '').trim();
+        if (!input) return null;
+        const lower = input.toLowerCase();
+        const emotes = S.items.filter(item => /^EID_/i.test(item.id) || item.group === 'emote');
+        const byId = emotes.find(item => item.id.toLowerCase() === lower);
+        if (byId) return byId.id;
+        const byName = emotes.find(item => String(item.name || '').trim().toLowerCase() === lower);
+        if (byName) return byName.id;
+        const slug = input.replace(/^EID_/i, '').replace(/[\s_-]/g, '').toLowerCase();
+        const bySlug = emotes.find(item => item.id.replace(/^EID_/i, '').replace(/[\s_-]/g, '').toLowerCase() === slug);
+        if (bySlug) return bySlug.id;
+        if (/^EID_[A-Za-z0-9_]+$/i.test(input)) return input;
+        if (/^[A-Za-z0-9_]+$/.test(input)) return `EID_${input}`;
+        return null;
+    }
+
+    function renderQuickSection(title, entries, emptyMessage = t('items.noData')) {
+        const section = document.createElement('section');
+        section.className = 'quick-convert-section';
+        const heading = document.createElement('h3');
+        heading.textContent = title;
+        section.appendChild(heading);
+        if (!entries.length) {
+            const empty = document.createElement('p');
+            empty.className = 'quick-convert-empty';
+            empty.textContent = emptyMessage;
+            section.appendChild(empty);
+        } else {
+            for (const entry of entries) {
+                const row = document.createElement('div');
+                row.className = 'quick-convert-line';
+                if (entry.tag) {
+                    const tag = document.createElement('span');
+                    tag.className = 'line tag';
+                    tag.textContent = entry.tag;
+                    row.appendChild(tag);
+                }
+                const code = document.createElement('code');
+                code.textContent = entry.value;
+                const copy = document.createElement('button');
+                copy.type = 'button';
+                copy.className = 'btn btn-small';
+                copy.textContent = t('common.copy');
+                copy.addEventListener('click', () => ui.copy(entry.value, copy));
+                row.append(code, copy);
+                section.appendChild(row);
+            }
+        }
+        $('quick-convert-results').appendChild(section);
+    }
+
+    async function runQuickConvert(event) {
+        event.preventDefault();
+        const characterId = $('quick-character-id').value.trim();
+        const emoteInput = $('quick-emote-name').value.trim();
+        const status = $('quick-convert-status');
+        const runButton = $('quick-convert-run');
+        const results = $('quick-convert-results');
+        results.replaceChildren();
+        if (!characterId || !emoteInput) {
+            status.textContent = t('items.quickInputRequired');
+            return;
+        }
+        const emoteId = resolveQuickEmoteId(emoteInput);
+        if (!emoteId) {
+            status.textContent = t('items.quickEmoteNotFound');
+            return;
+        }
+
+        runButton.disabled = true;
+        status.textContent = t('items.quickLoading');
+        try {
+            const settled = await Promise.allSettled([
+                FT.assets.findContaining(characterId),
+                emoteToAnimation(emoteId),
+                emoteToSequenceAnimation(emoteId),
+                emoteToAudio(emoteId),
+            ]);
+            const characterResult = settled[0].status === 'fulfilled' ? settled[0].value : { exact: [], related: [] };
+            const characterPaths = [...new Set([...(characterResult.exact || []), ...(characterResult.related || [])])];
+            renderQuickSection(t('items.quickCharacterPaths', { n: characterPaths.length.toLocaleString() }), characterPaths.map(value => ({ value: assetDisplay(value) })), t('items.quickNoCharacterPaths'));
+
+            const animation = settled[1].status === 'fulfilled' ? settled[1].value : null;
+            const animEntries = animation ? [
+                { tag: t('items.male'), value: animation.male },
+                { tag: t('items.female'), value: animation.female },
+            ].filter(entry => hasPathValue(entry.value)) : [];
+            renderQuickSection(t('items.quickEmoteAnimation'), animEntries);
+
+            const sequence = settled[2].status === 'fulfilled' ? settled[2].value : null;
+            renderQuickSection(t('items.quickSequence'), hasPathValue(sequence) ? [{ value: sequence }] : []);
+
+            const audio = settled[3].status === 'fulfilled' ? settled[3].value : null;
+            renderQuickSection(t('items.quickAudio'), Array.isArray(audio) ? audio.filter(hasPathValue).map(value => ({ value })) : []);
+
+            status.textContent = settled.some(result => result.status === 'rejected') ? t('items.error') : '';
+        } catch (error) {
+            console.error(error);
+            status.textContent = error.message || t('items.error');
+        } finally {
+            runButton.disabled = false;
+        }
+    }
+
     dom.dlg.addEventListener('close', () => { document.body.style.overflow = ''; });
     $('d-close').addEventListener('click', closeDetail);
     dom.dlg.addEventListener('click', e => { if (e.target === dom.dlg) closeDetail(); });   // backdrop tap
@@ -632,6 +737,12 @@
         dom.recent.setAttribute('aria-pressed', String(on));
         applyFilters();
     });
+
+    const quickDialog = $('quick-convert-dialog');
+    $('quick-convert-trigger').addEventListener('click', () => quickDialog.showModal());
+    $('quick-convert-close').addEventListener('click', () => quickDialog.close());
+    quickDialog.addEventListener('click', event => { if (event.target === quickDialog) quickDialog.close(); });
+    $('quick-convert-form').addEventListener('submit', runQuickConvert);
 
     // asset options in the detail sheet: formatted ⇄ raw, + _C
     function setFmt(on) {
