@@ -283,8 +283,6 @@ async function showNewAssets() {
         let html = resultsHtml('sa.newSummary', { n: list.length.toLocaleString(), c: data.cosmetics.toLocaleString(), d: NEW_AS_DAYS });
         if (data.missing) html += ` <span>${FT.ui.esc(t('sa.missing', { m: data.missing }))}</span>`;
         renderAll(list, html);
-        // New AS is intentionally shown in full; regular searches remain chunked for performance.
-        while (shown < rows.length) renderChunk();
     } catch (e) {
         console.error(e);
         newAsCache = null;
@@ -363,6 +361,7 @@ async function scanUploadedFiles() {
         FT.ui.toast(t('sa.noFiles'));
         return;
     }
+    const keywords = getKeywords();
     setLoading(true, t('sa.searching'));
     try {
         const [assets, texts] = await Promise.all([
@@ -380,7 +379,12 @@ async function scanUploadedFiles() {
                 }
             }
         }
-        const fileRows = [...matches].map(([raw, names], sourceIndex) => ({ raw, sourceIndex, meta: [...names].join(', ') }));
+        const fileRows = [...matches]
+            .map(([raw, names], sourceIndex) => ({ raw, sourceIndex, meta: [...names].join(', ') }))
+            .filter(row => {
+                const path = row.raw.toLowerCase();
+                return keywords.every(keyword => path.includes(keyword));
+            });
         fileScanActive = true;
         renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
         el.copyAllBtn.hidden = fileRows.length === 0;
