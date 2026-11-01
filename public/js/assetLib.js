@@ -28,7 +28,7 @@ FT.assets = (() => {
 
     const baseName = p => {
         const s = p.slice(p.lastIndexOf('/') + 1);
-        return s.replace(/\.uasset$/i, '').toLowerCase();
+        return s.replace(/\.(?:uasset|umap)$/i, '').toLowerCase();
     };
 
     /** All asset paths whose file name is exactly `id` (case-insensitive). */

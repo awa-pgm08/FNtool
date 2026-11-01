@@ -283,6 +283,8 @@ async function showNewAssets() {
         let html = resultsHtml('sa.newSummary', { n: list.length.toLocaleString(), c: data.cosmetics.toLocaleString(), d: NEW_AS_DAYS });
         if (data.missing) html += ` <span>${FT.ui.esc(t('sa.missing', { m: data.missing }))}</span>`;
         renderAll(list, html);
+        // New AS is intentionally shown in full; regular searches remain chunked for performance.
+        while (shown < rows.length) renderChunk();
     } catch (e) {
         console.error(e);
         newAsCache = null;
