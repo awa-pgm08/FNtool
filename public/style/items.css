@@ -203,7 +203,7 @@
 .quick-convert-head h2 { margin: 0; font-size: 18px; }
 .quick-convert-body { padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .quick-convert-help, .quick-convert-status { margin: 0 0 12px; color: var(--fg-mute); font-size: 12px; }
-.quick-convert-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.quick-convert-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
 .quick-convert-form label { display: grid; gap: 5px; color: var(--fg-soft); font-size: 12px; }
 .quick-convert-form input { min-width: 0; width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--bg); color: var(--fg); font: 13px var(--mono); }
 .quick-convert-form button { min-height: 40px; }
@@ -214,11 +214,13 @@
 .quick-convert-section .quick-convert-empty { margin: 0; color: var(--fg-mute); font-size: 12px; }
 .quick-convert-line { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; }
 .quick-convert-line + .quick-convert-line { border-top: 1px dashed var(--line); }
+.quick-convert-tag { flex: 0 0 126px; color: var(--fg-mute); font-size: 11px; line-height: 1.55; }
 .quick-convert-line code { flex: 1; min-width: 0; color: var(--fg); font: 11px/1.55 var(--mono); overflow-wrap: anywhere; }
 .quick-convert-line .btn { flex: 0 0 auto; }
 @media (max-width: 720px) {
     .quick-convert-dialog { width: 100%; max-width: 100%; max-height: 94dvh; margin: auto 0 0; border-radius: 16px 16px 0 0; }
     .quick-convert-form { grid-template-columns: 1fr; }
     .quick-convert-form button { justify-self: start; }
+    .quick-convert-tag { flex-basis: 105px; }
     .quick-convert-body { padding: 14px 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 }

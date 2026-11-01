@@ -605,23 +605,6 @@
 
     function closeDetail() { openToken++; S.openId = null; dom.dlg.close(); }
 
-    function resolveQuickEmoteId(value) {
-        const input = String(value || '').trim();
-        if (!input) return null;
-        const lower = input.toLowerCase();
-        const emotes = S.items.filter(item => /^EID_/i.test(item.id) || item.group === 'emote');
-        const byId = emotes.find(item => item.id.toLowerCase() === lower);
-        if (byId) return byId.id;
-        const byName = emotes.find(item => String(item.name || '').trim().toLowerCase() === lower);
-        if (byName) return byName.id;
-        const slug = input.replace(/^EID_/i, '').replace(/[\s_-]/g, '').toLowerCase();
-        const bySlug = emotes.find(item => item.id.replace(/^EID_/i, '').replace(/[\s_-]/g, '').toLowerCase() === slug);
-        if (bySlug) return bySlug.id;
-        if (/^EID_[A-Za-z0-9_]+$/i.test(input)) return input;
-        if (/^[A-Za-z0-9_]+$/.test(input)) return `EID_${input}`;
-        return null;
-    }
-
     function renderQuickSection(title, entries, emptyMessage = t('items.noData')) {
         const section = document.createElement('section');
         section.className = 'quick-convert-section';
@@ -639,7 +622,7 @@
                 row.className = 'quick-convert-line';
                 if (entry.tag) {
                     const tag = document.createElement('span');
-                    tag.className = 'line tag';
+                    tag.className = 'quick-convert-tag';
                     tag.textContent = entry.tag;
                     row.appendChild(tag);
                 }
@@ -657,57 +640,37 @@
         $('quick-convert-results').appendChild(section);
     }
 
-    async function runQuickConvert(event) {
-        event.preventDefault();
-        const characterId = $('quick-character-id').value.trim();
-        const emoteInput = $('quick-emote-name').value.trim();
+    function renderQuickPredictions(value) {
+        const input = String(value || '').trim();
         const status = $('quick-convert-status');
-        const runButton = $('quick-convert-run');
         const results = $('quick-convert-results');
         results.replaceChildren();
-        if (!characterId || !emoteInput) {
-            status.textContent = t('items.quickInputRequired');
+        status.textContent = '';
+        if (!input) return;
+
+        let entries;
+        if (/^EID_/i.test(input)) {
+            const slug = input.replace(/^EID_/i, '').replace(/[^A-Za-z0-9_]/g, '');
+            if (!slug) { status.textContent = t('items.quickInvalidId'); return; }
+            entries = [
+                { tag: t('items.male'), value: `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM_M.Emote_${slug}_CMM_M` },
+                { tag: t('items.female'), value: `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMF/Emote_${slug}_CMF_M.Emote_${slug}_CMF_M` },
+                { tag: t('items.seq'), value: `/BRCosmetics/Animation/Game/MainPlayer/Emotes/${slug}/CMM/Emote_${slug}_CMM.Emote_${slug}_CMM` },
+                { tag: t('items.audio'), value: `/BRCosmetics/Sounds/Emotes/${slug}/Emote_${slug}_Music.Emote_${slug}_Music` },
+            ];
+        } else if (/^(?:Character_|CID_)/i.test(input)) {
+            const slug = characterSlug(input);
+            if (!slug) { status.textContent = t('items.quickInvalidId'); return; }
+            entries = [{
+                tag: t('items.predictCharacter'),
+                value: `/BRCosmetics/Athena/Items/Cosmetics/Characters/Character_${slug}.Character_${slug}`,
+            }];
+        } else {
+            if (/^(?:EID_|Character_|CID_)$/i.test(input)) return;
+            status.textContent = t('items.quickInvalidId');
             return;
         }
-        const emoteId = resolveQuickEmoteId(emoteInput);
-        if (!emoteId) {
-            status.textContent = t('items.quickEmoteNotFound');
-            return;
-        }
-
-        runButton.disabled = true;
-        status.textContent = t('items.quickLoading');
-        try {
-            const settled = await Promise.allSettled([
-                FT.assets.findContaining(characterId),
-                emoteToAnimation(emoteId),
-                emoteToSequenceAnimation(emoteId),
-                emoteToAudio(emoteId),
-            ]);
-            const characterResult = settled[0].status === 'fulfilled' ? settled[0].value : { exact: [], related: [] };
-            const characterPaths = [...new Set([...(characterResult.exact || []), ...(characterResult.related || [])])];
-            renderQuickSection(t('items.quickCharacterPaths', { n: characterPaths.length.toLocaleString() }), characterPaths.map(value => ({ value: assetDisplay(value) })), t('items.quickNoCharacterPaths'));
-
-            const animation = settled[1].status === 'fulfilled' ? settled[1].value : null;
-            const animEntries = animation ? [
-                { tag: t('items.male'), value: animation.male },
-                { tag: t('items.female'), value: animation.female },
-            ].filter(entry => hasPathValue(entry.value)) : [];
-            renderQuickSection(t('items.quickEmoteAnimation'), animEntries);
-
-            const sequence = settled[2].status === 'fulfilled' ? settled[2].value : null;
-            renderQuickSection(t('items.quickSequence'), hasPathValue(sequence) ? [{ value: sequence }] : []);
-
-            const audio = settled[3].status === 'fulfilled' ? settled[3].value : null;
-            renderQuickSection(t('items.quickAudio'), Array.isArray(audio) ? audio.filter(hasPathValue).map(value => ({ value })) : []);
-
-            status.textContent = settled.some(result => result.status === 'rejected') ? t('items.error') : '';
-        } catch (error) {
-            console.error(error);
-            status.textContent = error.message || t('items.error');
-        } finally {
-            runButton.disabled = false;
-        }
+        renderQuickSection(t('items.quickPredictedPaths'), entries);
     }
 
     dom.dlg.addEventListener('close', () => { document.body.style.overflow = ''; });
@@ -742,7 +705,12 @@
     $('quick-convert-trigger').addEventListener('click', () => quickDialog.showModal());
     $('quick-convert-close').addEventListener('click', () => quickDialog.close());
     quickDialog.addEventListener('click', event => { if (event.target === quickDialog) quickDialog.close(); });
-    $('quick-convert-form').addEventListener('submit', runQuickConvert);
+    const quickPredictInput = $('quick-predict-id');
+    quickPredictInput.addEventListener('input', () => renderQuickPredictions(quickPredictInput.value));
+    $('quick-convert-form').addEventListener('submit', event => {
+        event.preventDefault();
+        renderQuickPredictions(quickPredictInput.value);
+    });
 
     // asset options in the detail sheet: formatted ⇄ raw, + _C
     function setFmt(on) {
