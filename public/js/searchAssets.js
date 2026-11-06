@@ -1,13 +1,10 @@
 // ─────────────────────────────────────────────────────────────
 //  Search Assets
 //   • All / New tabs  → fortnite_assets.gz / fortnite_assets_new.gz
-//   • "New AS" button → assets of cosmetics added in the last 7 days
-//                       (dates from Fortnite-API, paths from the asset list)
+//  • "New AS" button → every path in the latest upstream additions list
 // ─────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 500;
-const NEW_AS_DAYS = 7;
-
 const $ = id => document.getElementById(id);
 const t = (k, v) => FT.i18n.t(k, v);
 const el = {
@@ -35,7 +32,6 @@ const el = {
 let currentList = 'all';   // 'all' | 'new'  (which .gz file the tabs point at)
 let rows = [];             // [{ raw, meta? }]  — what is currently displayed
 let shown = 0;
-let newAsCache = null;     // { rows, cosmetics, missing }
 let selectedFiles = [];
 let fileScanActive = false;
 const cosmeticsCache = new Map();
@@ -243,50 +239,31 @@ async function searchAssets() {
     }
 }
 
-// ── New AS: last 7 days ──────────────────────────────────────
+// ── New AS: all paths in the latest upstream additions list ──
 const fmtDate = ts => new Date(ts).toLocaleDateString(FT.i18n.lang === 'ja' ? 'ja-JP' : undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 const assetIdFromPath = raw => raw.slice(raw.lastIndexOf('/') + 1).replace(/\.(?:uasset|umap)$/i, '').toLowerCase();
 const addedMeta = ts => `${t('sa.added')}: ${ts ? fmtDate(ts) : '—'}`;
 
-async function buildNewAs() {
-    if (newAsCache) return newAsCache;
-
-    const [cosmetics] = await Promise.all([cosmeticsFor(FT.i18n.lang), FT.assets.load('all')]);
-    const recent = cosmetics
-        .filter(i => FT.cosmetics.isRecent(i, NEW_AS_DAYS))
-        .sort((a, b) => b.added - a.added);
-
-    const found = await FT.assets.findByIds(recent.map(i => i.id));
-
-    const out = [];
-    let missing = 0;
-    for (const item of recent) {
-        const paths = found.get(item.id.toLowerCase());
-        if (!paths) { missing++; continue; }
-        for (const raw of paths) {
-            out.push({ raw, added: item.added, sourceIndex: out.length, meta: `${item.name} · ${item.id} · ${fmtDate(item.added)}`, search: (raw + ' ' + item.search).toLowerCase() });
-        }
-    }
-    newAsCache = { rows: out, cosmetics: recent.length, missing };
-    return newAsCache;
-}
-
 async function showNewAssets() {
+    currentList = 'new';
+    el.allTab.classList.remove('active');
+    el.newTab.classList.add('active');
     setLoading(true, t('sa.findingNew'));
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
-        const data = await buildNewAs();
+        const paths = await FT.assets.load('new', { refresh: true });
         const keywords = getKeywords();
-        const list = keywords.length ? data.rows.filter(r => keywords.every(k => r.search.includes(k))) : data.rows;
-
-        let html = resultsHtml('sa.newSummary', { n: list.length.toLocaleString(), c: data.cosmetics.toLocaleString(), d: NEW_AS_DAYS });
-        if (data.missing) html += ` <span>${FT.ui.esc(t('sa.missing', { m: data.missing }))}</span>`;
-        renderAll(list, html);
+        const list = paths
+            .map((raw, sourceIndex) => ({ raw, sourceIndex, search: raw.toLowerCase() }))
+            .filter(row => keywords.every(keyword => row.search.includes(keyword)));
+        renderAll(list, resultsHtml('sa.newPathSummary', {
+            n: list.length.toLocaleString(),
+            total: paths.length.toLocaleString(),
+        }));
     } catch (e) {
         console.error(e);
-        newAsCache = null;
-        FT.ui.toast(t('sa.apiFail'));
+        FT.ui.toast(t('sa.loadFail'));
     } finally {
         setLoading(false);
     }

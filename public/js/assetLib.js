@@ -18,10 +18,14 @@ FT.assets = (() => {
         return text.split('\n').map(p => p.trim()).filter(Boolean);
     }
 
-    /** kind: 'all' | 'new'. Loaded once, then cached. */
-    function load(kind = 'all') {
+    /** kind: 'all' | 'new'. Cached unless refresh is requested. */
+    function load(kind = 'all', { refresh = false } = {}) {
+        if (!FILES[kind]) return Promise.reject(new Error(`Unknown asset list: ${kind}`));
+        if (refresh) delete cache[kind];
         if (!cache[kind]) {
-            cache[kind] = loadGzip(DATA_BASE + FILES[kind]).catch(e => { delete cache[kind]; throw e; });
+            const url = new URL(FILES[kind], DATA_BASE);
+            if (refresh) url.searchParams.set('_refresh', Date.now().toString());
+            cache[kind] = loadGzip(url.href).catch(e => { delete cache[kind]; throw e; });
         }
         return cache[kind];
     }

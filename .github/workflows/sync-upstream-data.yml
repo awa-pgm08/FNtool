@@ -2,8 +2,8 @@ name: Sync upstream asset data and deploy
 
 on:
   schedule:
-    # Check the upstream repository every 6 hours.
-    - cron: '17 */6 * * *'
+    # Check for new upstream asset paths every hour.
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
