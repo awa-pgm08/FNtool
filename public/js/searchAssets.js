@@ -7,6 +7,7 @@
 const PAGE_SIZE = 500;
 const $ = id => document.getElementById(id);
 const t = (k, v) => FT.i18n.t(k, v);
+const FBKP_WORKER_URL = new URL('./fbkpWorker.js', document.currentScript.src);
 const el = {
     keywords:  $('keywords'),
     formatted: $('formatted'),
@@ -347,20 +348,42 @@ async function scanUploadedFiles() {
         return;
     }
     const keywords = getKeywords();
+    const backups = selectedFiles.filter(file => file.name.toLowerCase().endsWith('.fbkp'));
+    const textFiles = selectedFiles.filter(file => !file.name.toLowerCase().endsWith('.fbkp'));
+    if (backups.length && !keywords.length) {
+        el.fileStatus.textContent = t('sa.fbkpNeedKeyword');
+        FT.ui.toast(t('sa.fbkpNeedKeyword'));
+        el.keywords.focus();
+        return;
+    }
     setLoading(true, t('sa.searching'));
     try {
-        const [assets, texts] = await Promise.all([
-            FT.assets.load('all'),
-            Promise.all(selectedFiles.map(async file => ({ name: file.name, text: await file.text() }))),
-        ]);
-        const index = buildFileAssetIndex(assets);
         const matches = new Map();
-        for (const file of texts) {
-            for (const candidate of fileCandidates(file.text)) {
-                const rawPaths = index.get(lookupKey(candidate)) || [];
-                for (const raw of rawPaths) {
-                    if (!matches.has(raw)) matches.set(raw, new Set());
-                    matches.get(raw).add(file.name);
+        let scannedEntries = 0;
+        let capped = false;
+        for (const file of backups) {
+            const result = await scanFbkpFile(file, keywords);
+            scannedEntries += result.total;
+            capped ||= result.truncated;
+            for (const raw of result.paths) {
+                if (!matches.has(raw)) matches.set(raw, new Set());
+                matches.get(raw).add(file.name);
+            }
+        }
+
+        if (textFiles.length) {
+            const [assets, texts] = await Promise.all([
+                FT.assets.load('all'),
+                Promise.all(textFiles.map(async file => ({ name: file.name, text: await file.text() }))),
+            ]);
+            const index = buildFileAssetIndex(assets);
+            for (const file of texts) {
+                for (const candidate of fileCandidates(file.text)) {
+                    const rawPaths = index.get(lookupKey(candidate)) || [];
+                    for (const raw of rawPaths) {
+                        if (!matches.has(raw)) matches.set(raw, new Set());
+                        matches.get(raw).add(file.name);
+                    }
                 }
             }
         }
@@ -371,17 +394,47 @@ async function scanUploadedFiles() {
                 return keywords.every(keyword => path.includes(keyword));
             });
         fileScanActive = true;
-        renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
+        if (backups.length) {
+            renderAll(fileRows, resultsHtml('sa.fbkpSummary', { f: backups.length, n: fileRows.length, total: scannedEntries.toLocaleString() }));
+            if (capped) el.fileStatus.textContent = t('sa.fbkpCapped', { n: '100,000' });
+            else el.fileStatus.textContent = '';
+        } else {
+            renderAll(fileRows, resultsHtml('sa.fileSummary', { f: selectedFiles.length, n: fileRows.length }));
+        }
         el.copyAllBtn.hidden = fileRows.length === 0;
         if (!fileRows.length) el.fileStatus.textContent = t('sa.noFileMatches');
-        else el.fileStatus.textContent = '';
     } catch (e) {
         console.error(e);
-        el.fileStatus.textContent = t('sa.fileReadFail');
-        FT.ui.toast(t('sa.fileReadFail'));
+        const message = backups.length ? t('sa.fbkpInvalid') : t('sa.fileReadFail');
+        el.fileStatus.textContent = message;
+        FT.ui.toast(message);
     } finally {
         setLoading(false);
     }
+}
+
+function scanFbkpFile(file, keywords) {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(FBKP_WORKER_URL);
+        const jobId = `${Date.now()}-${Math.random()}`;
+        worker.onmessage = ({ data }) => {
+            if (data.jobId !== jobId) return;
+            if (data.type === 'progress') {
+                el.fileStatus.textContent = t('sa.fbkpProgress', { file: file.name, n: data.count.toLocaleString() });
+            } else if (data.type === 'done') {
+                worker.terminate();
+                resolve(data);
+            } else if (data.type === 'error') {
+                worker.terminate();
+                reject(new Error(data.error));
+            }
+        };
+        worker.onerror = event => {
+            worker.terminate();
+            reject(new Error(event.message || t('sa.fileReadFail')));
+        };
+        worker.postMessage({ file, keywords, jobId });
+    });
 }
 
 function clearUploadedFiles() {
@@ -415,7 +468,8 @@ window.addEventListener('DOMContentLoaded', () => {
     el.files.addEventListener('change', () => {
         selectedFiles = [...el.files.files];
         renderFileList();
-        el.fileStatus.textContent = selectedFiles.length ? t('sa.fileHint') : '';
+        const hasBackup = selectedFiles.some(file => file.name.toLowerCase().endsWith('.fbkp'));
+        el.fileStatus.textContent = !selectedFiles.length ? '' : t(hasBackup ? 'sa.fbkpHint' : 'sa.fileHint');
     });
     el.clearFilesBtn.addEventListener('click', clearUploadedFiles);
     el.copyAllBtn.addEventListener('click', () => {
