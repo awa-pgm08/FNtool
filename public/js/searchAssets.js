@@ -215,6 +215,11 @@ async function searchAssets() {
     fileScanActive = false;
     el.copyAllBtn.hidden = true;
     try {
+        if (currentList === 'new') {
+            const paths = await FT.assets.load('new');
+            renderNewPathResults(paths, keywords);
+            return;
+        }
         const [assets, cosmetics] = await Promise.all([
             FT.assets.load(currentList),
             cosmeticsFor(FT.i18n.lang).catch(() => []),
@@ -244,6 +249,16 @@ const fmtDate = ts => new Date(ts).toLocaleDateString(FT.i18n.lang === 'ja' ? 'j
 const assetIdFromPath = raw => raw.slice(raw.lastIndexOf('/') + 1).replace(/\.(?:uasset|umap)$/i, '').toLowerCase();
 const addedMeta = ts => `${t('sa.added')}: ${ts ? fmtDate(ts) : '—'}`;
 
+function renderNewPathResults(paths, keywords) {
+    const list = paths
+        .map((raw, sourceIndex) => ({ raw, sourceIndex, search: raw.toLowerCase() }))
+        .filter(row => keywords.every(keyword => row.search.includes(keyword)));
+    renderAll(list, resultsHtml('sa.newPathSummary', {
+        n: list.length.toLocaleString(),
+        total: paths.length.toLocaleString(),
+    }));
+}
+
 async function showNewAssets() {
     currentList = 'new';
     el.allTab.classList.remove('active');
@@ -253,14 +268,7 @@ async function showNewAssets() {
     el.copyAllBtn.hidden = true;
     try {
         const paths = await FT.assets.load('new', { refresh: true });
-        const keywords = getKeywords();
-        const list = paths
-            .map((raw, sourceIndex) => ({ raw, sourceIndex, search: raw.toLowerCase() }))
-            .filter(row => keywords.every(keyword => row.search.includes(keyword)));
-        renderAll(list, resultsHtml('sa.newPathSummary', {
-            n: list.length.toLocaleString(),
-            total: paths.length.toLocaleString(),
-        }));
+        renderNewPathResults(paths, getKeywords());
     } catch (e) {
         console.error(e);
         FT.ui.toast(t('sa.loadFail'));
