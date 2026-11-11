@@ -18,8 +18,8 @@ FT.i18n = (() => {
             'title.home': 'Fortnite Tools', 'title.items': 'Items · Fortnite Tools', 'title.searchAssets': 'Search Assets · Fortnite Tools',
             'title.convert': 'Convert · Fortnite Tools', 'title.deviceMeshs': 'DeviceMeshs · Fortnite Tools',
             'title.pathModifier': 'PathModifier · Fortnite Tools', 'title.id': 'Id · Fortnite Tools',
-            'footer.help': '-',
-            'footer.helpApi': '-',
+            'footer.help': 'If you have any problems, my Discord server is: <a href="https://discord.gg/bqB6auyDW5" target="_blank" rel="noopener">awa Community</a>.',
+            'footer.helpApi': 'If you have any problems, my Discord server is: <a href="https://discord.gg/bqB6auyDW5" target="_blank" rel="noopener">awa Community</a>. Item data: <a href="https://fortnite-api.com" target="_blank" rel="noopener">Fortnite-API</a>.',
             'lang.label': 'Language', 'top': 'Back to top',
             'sb.menu': 'Menu', 'sb.search': 'Search', 'sb.collapse': 'Collapse sidebar', 'sb.expand': 'Expand sidebar', 'sb.open': 'Open menu', 'sb.discord': 'Join Discord', 'sb.lang': 'Language: English',
 
@@ -104,8 +104,8 @@ FT.i18n = (() => {
             'title.home': 'Fortnite Tools', 'title.items': 'アイテム · Fortnite Tools', 'title.searchAssets': 'アセット検索 · Fortnite Tools',
             'title.convert': '変換 · Fortnite Tools', 'title.deviceMeshs': 'デバイスメッシュ · Fortnite Tools',
             'title.pathModifier': 'パス変換 · Fortnite Tools', 'title.id': 'ID · Fortnite Tools',
-            'footer.help': '-',
-            'footer.helpApi': '-',
+            'footer.help': '何か問題があれば、Discordサーバー: <a href="https://discord.gg/bqB6auyDW5" target="_blank" rel="noopener">awa Community</a>.',
+            'footer.helpApi': '何か問題があれば、Discordサーバー: <a href="https://discord.gg/bqB6auyDW5" target="_blank" rel="noopener">awa Community</a>. アイテムデータ: <a href="https://fortnite-api.com" target="_blank" rel="noopener">Fortnite-API</a>.',
             'lang.label': '言語', 'top': 'ページの先頭へ',
             'sb.menu': 'メニュー', 'sb.search': '検索', 'sb.collapse': 'サイドバーを閉じる', 'sb.expand': 'サイドバーを開く', 'sb.open': 'メニューを開く', 'sb.discord': 'Discordに参加', 'sb.lang': '言語: 日本語',
 

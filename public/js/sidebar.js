@@ -8,7 +8,7 @@
     'use strict';
 
     // Put your Discord invite URL here. Leave empty to hide the Discord row.
-    var DISCORD_URL = '';
+    var DISCORD_URL = 'https://discord.gg/bqB6auyDW5';
 
     var SRC = document.currentScript && document.currentScript.src;
     if (!SRC) return;
